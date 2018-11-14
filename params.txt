@@ -1,0 +1,50 @@
+// number of lattice sites
+NUM 		512
+
+// spatial lattice spacing in GeV^-1
+A		0.25
+
+// temporal lattice spacing
+EPS		0.005
+
+//initial starting time in fm/c
+TINIT		1.0
+
+//initial starting temperature in GeV
+TSTART		0.33
+
+// maximum # of steps to take
+STEPS   	50000
+
+// how many steps before recording measurables
+UPDATE		400
+
+// how many steps before dumping all variables to file; "taking a snapshot"
+SNAPUPDATE	400
+
+//viscosity over entropy
+ETAOS		 .08
+
+//freeze-out temperature
+TF		0.155
+
+//freeze-out energy density
+EF		0.0005
+
+//dimensionless value of relaxation time
+COEFF		3.0
+
+//Critical Temperature in GeV
+TC	 0.2
+
+//half-width of critical region
+DELTA	 0.02
+
+//Once the critical anulus exceeds this, turn on the critical eos
+DELTA_R_CRIT  3
+
+//Controls relaxation of phi
+//LAMBDA_M  10
+
+//Number of phi modes to include
+//NUM_MODES  4
