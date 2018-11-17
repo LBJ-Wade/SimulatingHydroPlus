@@ -163,9 +163,9 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
     db += .5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1);
 
     dpde += -.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq);
-		if(counter%400 == 0) printf("rQdsdb: %e %e\n",// s*A*.1973, Q[i]/A/.1973,
-									 	.5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1),
-										.5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1));
+		//if(counter%400 == 0) printf("rQdsdb: %e %e\n",// s*A*.1973, Q[i]/A/.1973,
+		//							 	.5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1),
+		//								.5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1));
   }
 
   double wplus = (eos(mye, s) + mye + T(s)*ds)/(1. + T(s)*db);
@@ -188,8 +188,8 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
 
 		dpdr += dpdphi * Drphi(i,s);
 		result[3] += dpdphi * Dtphi(i,s,phi_eq);
-		if(counter%400 == 0) printf("dp %e \n", .5*measure/bplus/phi_eq * (-wplus * phi_p/phi_eq + phi_eq/phi[i][s]-1) * Drphi(i,s)
-								-.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq)*wplus/bplus*Dre(s));
+		//if(counter%400 == 0) printf("dp %e \n", .5*measure/bplus/phi_eq * (-wplus * phi_p/phi_eq + phi_eq/phi[i][s]-1) * Drphi(i,s)
+		//						-.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq)*wplus/bplus*Dre(s));
 	}
 }
 

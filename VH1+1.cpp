@@ -73,7 +73,7 @@ double TC = .2, DELTA = .03;
 double DELTA_R_CRIT = 2;
 
 // controls rate of phi relaxation
-double LAMBDA_M = 100;
+double LAMBDA_M = 1;
 
 // number of phi modes to include
 int NUM_MODES = 100;
