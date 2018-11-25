@@ -76,7 +76,7 @@ double DELTA_R_CRIT = 2;
 double LAMBDA_M = 1;
 
 // number of phi modes to include
-int NUM_MODES = 100;
+int NUM_MODES = 100-2;
 
 // these hold the current values
 double **u,*e,*pirr,*piee;
@@ -948,6 +948,7 @@ void Evolve()
 		{
 			outputMeasurements(t); 
       snapshot(t); 
+			if(t*.1973*A > 3.6) abort();
 		}
     i++;
     // evolve fields eps forward in time storing updated fields in captial vars

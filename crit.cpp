@@ -8,7 +8,7 @@ double getintXi(int site)
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   if(i!=-1) return (xi[i]+x*(xi[i+1]-xi[i]))/A;
-  else return 1/A;
+  else return 1/.1973/A;
   
 } 
 
@@ -18,7 +18,7 @@ double getint_dXi(int site)
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   if(i!=-1) return (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
-	else return exp(114.44*T(site)/A - 14.318);
+	else return exp(113.425*T(site)/A - 12.7038);
 }
 
 //return interpolated d^2 xi / d eps^2 in lattice units
@@ -30,7 +30,7 @@ double getint_d2Xi(int site)
   norm_fac *= norm_fac/A;
 
   if(i!=-1) return (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
-	else return exp(58.3215*T(site)/A - 6.287);
+	else return exp(57.0826*T(site)/A - 4.66766);
 }
 
 //return interpolated specific heat in lattice units
@@ -51,7 +51,7 @@ void load_crit_eos()
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    Q[j] = 2*M_PI*(j+0)/NUM;//!!!
+    Q[j] = 2*M_PI*(j+0)/2/NUM;//!!!
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
   }
   dQ[0] = dQ[1];
@@ -163,9 +163,9 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
     db += .5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1);
 
     dpde += -.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq);
-		//if(counter%400 == 0) printf("rQdsdb: %e %e\n",// s*A*.1973, Q[i]/A/.1973,
-		//							 	.5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1),
-		//								.5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1));
+		if(counter%400 == 0) printf("rQdsdb: %e %e\n",// s*A*.1973, Q[i]/A/.1973,
+									 	.5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1),
+										.5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1));
   }
 
   double wplus = (eos(mye, s) + mye + T(s)*ds)/(1. + T(s)*db);
@@ -188,8 +188,8 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
 
 		dpdr += dpdphi * Drphi(i,s);
 		result[3] += dpdphi * Dtphi(i,s,phi_eq);
-		//if(counter%400 == 0) printf("dp %e \n", .5*measure/bplus/phi_eq * (-wplus * phi_p/phi_eq + phi_eq/phi[i][s]-1) * Drphi(i,s)
-		//						-.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq)*wplus/bplus*Dre(s));
+		if(counter%400 == 0) printf("dp %e \n", .5*measure/bplus/phi_eq * (-wplus * phi_p/phi_eq + phi_eq/phi[i][s]-1) * Drphi(i,s)
+								-.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq)*wplus/bplus*Dre(s));
 	}
 }
 
