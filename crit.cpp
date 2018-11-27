@@ -55,7 +55,7 @@ void load_crit_eos()
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    Q[j] = 2*M_PI*(j+0)/NUM*fac;//*fac;//!!!
+    Q[j] = 2*M_PI*(j+1)/NUM*fac;//*fac;//!!!
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
   }
   dQ[0] = dQ[1];
