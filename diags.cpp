@@ -158,17 +158,10 @@ void snapPplusProfile(double time)
   	sprintf(fname,"../data/snapshot/pplusprofile_%.3f.dat",time/5.06842*A);
   	out.open(fname, ios::out);
 		double fac = 1/A/A/A/A/A;
-		double dpdr, temp[4];
-		double first, second, third, fourth;
   	for (int s=1;s<=NUM;s++)
-  	{
-			crit_dp(dpdr, temp, e[s], s);
-			//dpdr=get_dpdr(e[s],s);
-			//get_tmp(first, second, third, fourth, s);
+  	{  
     	out << s/5.06842*A << "\t";
-			//out << first << "\t" << second << "\t" << third << "\t" << fourth << endl;
-    	out << eos(e[s],s )/A/A/A/A << "\t" << crit_eos(e[s], s)/A/A/A/A << "\t" << cs2(e[s])*Dre(s)*fac << "\t" << dpdr*fac << "\t" << temp[2] << "\t" << temp[3] << endl;
-			//out << getintXi(s) << "\t" << getint_dXi(s) << "\t" << getint_d2Xi(s) << endl;
+    	out << eos(e[s],s )/A/A/A/A << "\t" << crit_eos(e[s], s)/A/A/A/A << "\t" << cs2(e[s])*Dre(s)*fac << endl;//<< "\t" << crit_Drp(e[s],s)*fac << endl;
   	}
   	out.close();
 	}

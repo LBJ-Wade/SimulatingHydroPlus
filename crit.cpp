@@ -4,33 +4,37 @@
 double getintXi(int site)
 {
   //return (1.+.632456/sqrt(sqrt(.000225+25.*(T(site)/A-TC)*(T(site)/A-TC))))/A;
-  
+  double result;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
-  if(i!=-1) return (xi[i]+x*(xi[i+1]-xi[i]))/A;
-  else return 1/A;
-  
+  if(i!=-1) result = (xi[i]+x*(xi[i+1]-xi[i]))/A;
+  else result = 1/A;
+  return result/fac;
 } 
 
 //return interpolated d xi/d eps in lattice units
 double getint_dXi(int site)
 {
+  double result;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
-  if(i!=-1) return (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
-	else return exp(114.44*T(site)/A - 14.318);
+  if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
+	else result = exp(114.44*T(site)/A - 14.318);
+  return result/fac;
 }
 
 //return interpolated d^2 xi / d eps^2 in lattice units
 double getint_d2Xi(int site)
 {
+  double result;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   double norm_fac = 1/(A*A*A*A);
   norm_fac *= norm_fac/A;
 
-  if(i!=-1) return (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
-	else return exp(58.3215*T(site)/A - 6.287);
+  if(i!=-1) result = (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
+	else result = exp(58.3215*T(site)/A - 6.287);
+  return result/fac;
 }
 
 //return interpolated specific heat in lattice units
@@ -51,7 +55,7 @@ void load_crit_eos()
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    Q[j] = 2*M_PI*(j+0)/NUM;//!!!
+    Q[j] = 2*M_PI*(j+0)/NUM*fac;//*fac;//!!!
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
   }
   dQ[0] = dQ[1];
@@ -131,6 +135,7 @@ double crit_eos(double mye, int s)
     db += .5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1);
   }
 
+	//printf("%e %e\n", eos(mye,s)+mye, (eos(mye, s) +mye +T(s)*ds)/(1+T(s)*db));
   return (eos(mye, s) + mye + T(s)*ds)/(1. + T(s)*db) - mye;
 }
 
@@ -163,9 +168,6 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
     db += .5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1);
 
     dpde += -.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq);
-		//if(counter%400 == 0) printf("rQdsdb: %e %e\n",// s*A*.1973, Q[i]/A/.1973,
-		//							 	.5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1),
-		//								.5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1));
   }
 
   double wplus = (eos(mye, s) + mye + T(s)*ds)/(1. + T(s)*db);
@@ -188,8 +190,8 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
 
 		dpdr += dpdphi * Drphi(i,s);
 		result[3] += dpdphi * Dtphi(i,s,phi_eq);
-		//if(counter%400 == 0) printf("dp %e \n", .5*measure/bplus/phi_eq * (-wplus * phi_p/phi_eq + phi_eq/phi[i][s]-1) * Drphi(i,s)
-		//						-.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq)*wplus/bplus*Dre(s));
 	}
+	//printf("%e %e\n", dpdr, result[3]);
+	//if(counter%10==0) abort();
 }
 

@@ -5,8 +5,7 @@ with back-reaction
 by
 
 Paul Romatschke
-
-Hydro+ changes by Gregory Ridgway
+and G-Nasty
 
 v0.0 January 2007
 v0.1 February 2007
@@ -61,7 +60,7 @@ long int STEPS=40000;
 double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15,TSTART=0.2;
 double EF = .015;
 int whichdisc=0;
-long int counter=0;
+long int counter = 0;
 
 // controls value of tau_Pi
 double COEFF=3.0;
@@ -72,8 +71,11 @@ double TC = .2, DELTA = .03;
 // anulus width past which critical eos is turned on
 double DELTA_R_CRIT = 2;
 
+// Set to .1973 to use proper units
+double fac = 1;
+
 // controls rate of phi relaxation
-double LAMBDA_M = 1;
+double LAMBDA_M = 1/fac/fac;
 
 // number of phi modes to include
 int NUM_MODES = 100;
@@ -97,8 +99,7 @@ long int length,globali;
 double globalx;
 
 double *eoT4,*cs2i,*poT4,*Ti;
-double *xi,*dXi,*d2Xi; //correlation length xi, dxi/deps, d^2xi/deps^2
-double *c_v,*Q,*dQ;
+double *xi,*dXi,*d2Xi,*c_v,*Q,*dQ;
 
 //radius of nucleus in fm
 double Rnuc=6.4;
@@ -483,10 +484,12 @@ double Dru(int i,int site)
 {
   double temp=0;
   if (site!=1)
-  {
-  	if (site==NUM) temp=u[i][site]-u[i][site-1];
-    else temp=(u[i][site+1]-u[i][site-1])/2;
-  }
+    {
+      if (site==NUM)
+	 {temp=u[i][site]-u[i][site-1];}
+       else
+	 temp=(u[i][site+1]-u[i][site-1])/2;
+    }
   else
     //temp=(2*u[i][site+1]-0.5*u[i][site+2]-1.5*u[i][site])/2.;
     temp=u[i][site+1]-u[i][site];
@@ -845,7 +848,7 @@ inline void doInc(double eps, long int iter)
 
       dtmat[1][0]=(p+e[s])*u[0][s]; //Derivative of u_t
       dtmat[1][1]=0.0;              //Derivative of u_r
-			if(crit_switch2 && back_react)
+			if(crit_switch2 && back_react && false)
 			{
 				dtmat[1][2] = -(1-u[0][s]*u[0][s])*crit_dtp[2];
 				rhs[1][0] += (1-u[0][s]*u[0][s])*crit_dtp[3];
@@ -864,7 +867,7 @@ inline void doInc(double eps, long int iter)
 
       dtmat[2][0]=0.0;                 //Derivative of u_t
       dtmat[2][1]=(p+e[s])*u[0][s];    //Derivative of u_r
-			if(crit_switch2 && back_react)
+			if(crit_switch2 && back_react && false)
 			{
 				dtmat[2][2] = u[0][s]*u[1][s]*crit_dtp[2];
 				rhs[2][0] -= u[0][s]*u[1][s]*crit_dtp[3];
@@ -923,13 +926,12 @@ inline void doInc(double eps, long int iter)
 				prev_dpit = dpit[3];
 				prev_dpir = dpir[3];
 			}
-
+			
+			double xiInv = 1/getintXi(s);
+			double phi_eq;
 			//if the eos is critical, evolve the phi derivatives
-			if(crit_switch2) for(int i=0; i<NUM_MODES; ++i)	
-			{
-				double phi_eq, xiInv;
-				xiInv = 1/getintXi(s);
-				phi_eq = 1/(Q[i]*Q[i] + xiInv*xiInv);
+			if(crit_switch2) for(int i=0; i<NUM_MODES; ++i){
+				phi_eq = 1/(Q[i]*Q[i]+xiInv*xiInv);
 				Phi[i][s] = phi[i][s] + eps*Dtphi(i,s,phi_eq);
 			}
 		}
