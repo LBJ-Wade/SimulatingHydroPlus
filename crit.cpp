@@ -16,10 +16,12 @@ double getintXi(int site)
 double getint_dXi(int site)
 {
   double result;
+	//double a = 114.44, c = 14.318;
+	double a = 114.533, c = 12.6947;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
-	else result = exp(114.44*T(site)/A - 14.318);
+	else result = exp(a*T(site)/A - c);
   return result/fac;
 }
 
@@ -27,13 +29,15 @@ double getint_dXi(int site)
 double getint_d2Xi(int site)
 {
   double result;
+	//double a = 58.3215, c = 6.287;
+	double a = 58.4386, 4.66487;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   double norm_fac = 1/(A*A*A*A);
   norm_fac *= norm_fac/A;
 
   if(i!=-1) result = (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
-	else result = exp(58.3215*T(site)/A - 6.287);
+	else result = exp(a*T(site)/A - c);
   return result/fac;
 }
 
