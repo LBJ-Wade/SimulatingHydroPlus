@@ -72,13 +72,13 @@ double TC = .2, DELTA = .03;
 double DELTA_R_CRIT = 2;
 
 // Set to .1973 to use proper units
-double fac = 1;
+double fac = .1973;
 
 // controls rate of phi relaxation
 double LAMBDA_M = 1/fac/fac;
 
 // number of phi modes to include
-int NUM_MODES = 20;
+int NUM_MODES = 80;
 
 // these hold the current values
 double **u,*e,*pirr,*piee;

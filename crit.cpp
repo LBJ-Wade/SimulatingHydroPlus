@@ -16,8 +16,8 @@ double getintXi(int site)
 double getint_dXi(int site)
 {
   double result;
-	//double a = 114.44, c = 14.318;
-	double a = 114.533, c = 12.6947;
+	double a = 114.44, c = 14.318;
+	//double a = 114.533, c = 12.6947;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
@@ -29,8 +29,8 @@ double getint_dXi(int site)
 double getint_d2Xi(int site)
 {
   double result;
-	//double a = 58.3215, c = 6.287;
-	double a = 58.4386, 4.66487;
+	double a = 58.3215, c = 6.287;
+	//double a = 58.4386, c = 4.66487;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   double norm_fac = 1/(A*A*A*A);
@@ -53,7 +53,7 @@ double getint_cv(int site)
 void load_crit_eos()
 {
   fstream eosf2;
-  if(back_react) eosf2.open("gregRyanEOS_backReact.dat", ios::in);
+  if(back_react) eosf2.open("gregRyanEOS_backReact_largeXi.dat", ios::in);
   else eosf2.open("gregRyanEOS_noBackReact.dat", ios::in);
 
   //phi momenta, midpoint interpolation
