@@ -78,7 +78,7 @@ double fac = .1973;
 double LAMBDA_M = 1/fac/fac;
 
 // number of phi modes to include
-int NUM_MODES = 80;
+int NUM_MODES = 100;
 
 // these hold the current values
 double **u,*e,*pirr,*piee;

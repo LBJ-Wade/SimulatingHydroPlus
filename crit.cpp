@@ -16,8 +16,7 @@ double getintXi(int site)
 double getint_dXi(int site)
 {
   double result;
-	double a = 114.44, c = 14.318;
-	//double a = 114.533, c = 12.6947;
+	double a = 113.425, c = 14.3269;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
@@ -29,8 +28,7 @@ double getint_dXi(int site)
 double getint_d2Xi(int site)
 {
   double result;
-	double a = 58.3215, c = 6.287;
-	//double a = 58.4386, c = 4.66487;
+	double a = 57.0826, c = 6.29069;
   long int i = geti(e[site]);
 	double x = getx(i, e[site]);
   double norm_fac = 1/(A*A*A*A);
@@ -53,13 +51,13 @@ double getint_cv(int site)
 void load_crit_eos()
 {
   fstream eosf2;
-  if(back_react) eosf2.open("gregRyanEOS_backReact_largeXi.dat", ios::in);
+  if(back_react) eosf2.open("gregRyanEOS_backReact_largeXi2.dat", ios::in);
   else eosf2.open("gregRyanEOS_noBackReact.dat", ios::in);
 
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    Q[j] = 2*M_PI*(j+1)/NUM*fac;//*fac;//!!!
+    Q[j] = 2*M_PI*(j+0)/NUM*fac;//*fac;//!!!
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
   }
   dQ[0] = dQ[1];
