@@ -69,6 +69,8 @@ long int length,globali;
 double globalx;
 
 double *eoT4,*cs2i,*poT4,*Ti;
+//c_v is never used, should be eliminated
+double *xi,*dXi,*d2Xi,*c_v;
 
 //radius of nucleus in fm
 double Rnuc=6.4;
@@ -80,6 +82,9 @@ double anuc=0.54;
 //flags
 int wflag=0;
 int reachedTf=0;
+
+//when true, use the critical equation of state
+bool crit_switch = false;
 
 // output files
 fstream T_out;
@@ -201,7 +206,6 @@ for (int s=1;s<=NUM;s++)
  enforceBCs();
 }
 
-
 //loads the equation of state
 void loadeos()
 {
@@ -227,14 +231,19 @@ void loadeos()
       cs2i = new double[length];
       poT4 = new double[length];
       Ti = new double[length];
+			//preferably, these should be defined in load_crit_eos()
+			xi = new double[length];
+			dXi = new double[length];
+      d2Xi = new double[length];
+      c_v = new double[length];
 
       for (int i=1;i<=length;i++)
-	{
-	  eosf >> Ti[i-1];
-	  eosf >> eoT4[i-1];
-	  eosf >> poT4[i-1];
-	  eosf >> cs2i[i-1];
-	}
+					{
+						eosf >> Ti[i-1];
+						eosf >> eoT4[i-1];
+						eosf >> poT4[i-1];
+						eosf >> cs2i[i-1];
+					}
 
       eosf.close();
     }
@@ -784,6 +793,9 @@ void Deltatdmupi(double *result,int site)
 //void gaussj(double **a, int n,double **b, int m)
 #include "GJE.cpp"
 
+//Hydro+ functions
+#include "crit.cpp"
+
 //here some diagnostic routines are defined
 #include "diags.cpp"
 
@@ -978,6 +990,14 @@ void Evolve() {
 		// increment time
 		t += eps;
 
+
+		// t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
+		if((t*.1973*A > 3.3) && !(crit_switch))
+    {
+      load_crit_eos();
+			crit_switch = true;
+      cout << "Critical eos being used now!!!" << endl;
+    }
   }
 }
 
