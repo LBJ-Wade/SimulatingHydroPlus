@@ -992,7 +992,7 @@ void Evolve() {
 
 
 		// t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
-		if((t*.1973*A > 3.3) && !(crit_switch))
+		if((t*.1973*A > 3.3) && !(crit_switch) && false)
     {
       load_crit_eos();
 			crit_switch = true;
