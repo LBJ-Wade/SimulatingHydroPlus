@@ -208,13 +208,13 @@ void loadeos()
   fstream eosf;
 
   //ideal equation of state
-  //eosf.open("idEOS.dat", ios::in);
+  eosf.open("idEOS.dat", ios::in);
 
   //qcd equation of state from Mikko Laine and York Schroeder, 
   //hep-ph/0603048
   //eosf.open("qcdEOS.dat",ios::in);
   //interpolated equation of state -- numerically more stable
-  eosf.open("qcdIEOS.dat",ios::in);
+  //eosf.open("qcdIEOS.dat",ios::in);
 
   if (eosf.is_open())
     {
