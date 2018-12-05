@@ -1,19 +1,31 @@
 /* Extra inputs required by hydro+ */
 
+//return interpolated correlation length in lattice units
+double getintXi()
+{
+	//xi is stored in fm.  So we must multiply by 1 = (fac GeV fm)^-1, i.e. divide by fac
+  double result;
+  long int i = globali;
+	double x = globalx;
+  if(i!=-1) result = (xi[i]+x*(xi[i+1]-xi[i]))/A;
+  else result = 1/A;
+  return result/fac;
+} 
+
 void load_crit_eos()
 {
   fstream eosf2;
   eosf2.open("gregRyanEOS_backReact.dat", ios::in);
+	Q = new double[NUM_MODES];
+	dQ = new double[NUM_MODES];
 
-#if 0
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    Q[j] = 2*M_PI*(j+2)/NUM;//*fac;//!!!
+    Q[j] = 2*M_PI*(j+0)/NUM;//*fac;//!!!
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
   }
   dQ[0] = dQ[1];
-#endif
 
   if (eosf2.is_open())
 	{
@@ -32,35 +44,21 @@ void load_crit_eos()
 			eosf2 >> c_v[i-1];
     }
 
-#if 0
 		//set initial phi to equilibrium value
     double xiInv;
     for (int s=1;s<=NUM;s++)
     {
     	globali = geti(e[s]);
     	globalx = getx(globali, e[s]);
-    	xiInv = 1/getintXi(s);
+    	xiInv = 1/getintXi();
     	for(int j=0; j<NUM_MODES; ++j) phi[j][s] = 1./(Q[j]*Q[j]+xiInv*xiInv);
     }
-#endif
     eosf2.close();
   }
   else cout << "Could not open EOS file" << endl;
 }
 
 #if 0
-//return interpolated correlation length in lattice units
-double getintXi(int site)
-{
-  //return (1.+.632456/sqrt(sqrt(.000225+25.*(T(site)/A-TC)*(T(site)/A-TC))))/A;
-  double result;
-  long int i = geti(e[site]);
-	double x = getx(i, e[site]);
-  if(i!=-1) result = (xi[i]+x*(xi[i+1]-xi[i]))/A;
-  else result = 1/A;
-  return result/fac;
-} 
-
 //return interpolated d xi/d eps in lattice units
 double getint_dXi(int site)
 {
@@ -99,7 +97,6 @@ double getint_cv(int site)
 #endif 
 
 
-#if 0
 /* p_(+) and derivatives of p_(+) and critical modes phi[i] */
 
 double Drphi(int i,int site)
@@ -120,6 +117,7 @@ double Dtphi(int i, int site, double phi_eq)
   return -u[1][site]/u[0][site]*Drphi(i,site) - LAMBDA_M/u[0][site] * phi_eq/phi[i][site] * (1 - phi_eq/phi[i][site]);
 }
 
+#if 0
 //returns p_(+)(e)
 double crit_eos(double mye, int s)
 {

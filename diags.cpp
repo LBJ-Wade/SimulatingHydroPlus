@@ -214,6 +214,32 @@ void snappieeprofile(double time)
   out.close();
 }
 
+void snapPhiprofile(double time)
+{
+  //if(time>10.77) printf("\n Inside Man!!! \n");
+  fstream out;
+  char fname[255];
+  sprintf(fname,"../data/snapshot/Lam%.1f_Phiprofile_%.3f.dat", LAMBDA_M, time/5.06842*A);
+  out.open(fname, ios::out);
+  double phi_eq, xiInv;
+  for (int s=1;s<=NUM;s++)
+  {
+    globali=geti(e[s]);
+    globalx=getx(globali,e[s]);
+    xiInv = 1/getintXi();
+    out << s/5.06842*A << "\t";
+    //out << LAMBDA_M << "\t" << NUM_MODES << "\t";
+    for(int i=0; i<NUM_MODES; ++i)
+    {
+      phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
+      //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
+      //else phi_eq = globalx*1.;
+      out << Q[i] << "\t" << phi_eq << "\t" << phi[i][s] << "\t";
+    }
+    out << endl;
+  }
+  out.close();
+}
 
 void snapshot(double time)
 {
@@ -221,6 +247,7 @@ void snapshot(double time)
   snapvprofile(time);
   snapRinvprofile(time);
   snapEDprofile(time);
+  if(crit_switch) snapPhiprofile(time);
   //snappirrprofile(time);
   //snappieeprofile(time);
 }

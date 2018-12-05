@@ -48,15 +48,23 @@ long int STEPS=40000;
 double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15,TSTART=0.2;
 int whichdisc=0;
 
+//converts from fm^-1 GeV: 1 fm^-1 = fac*GeV
+double fac = .1973;
+
+// controls rate of phi relaxation
+double LAMBDA_M = 1/fac/fac;
+
+// number of phi modes to include
+int NUM_MODES = 100;
+
 //controls value of tau_Pi
 double COEFF=3.0;
 
-
 // these hold the current values
-double **u,*e,*pirr,*piee;
+double **u,*e,*pirr,*piee,**phi;
 
 // these hold the updated values
-double **U,*E,*Pirr,*Piee;
+double **U,*E,*Pirr,*Piee,**Phi;
 
 //overall time
 double t = 0;
@@ -70,7 +78,7 @@ double globalx;
 
 double *eoT4,*cs2i,*poT4,*Ti;
 //c_v is never used, should be eliminated
-double *xi,*dXi,*d2Xi,*c_v;
+double *xi,*dXi,*d2Xi,*c_v,*Q,*dQ;
 
 //radius of nucleus in fm
 double Rnuc=6.4;
@@ -109,6 +117,10 @@ void allocateMemory() {
 	//Pi^\eta_\eta
 	piee = new double[NUM+2];
 
+	//critical mode
+  phi = new double*[NUM_MODES];
+  for(int i=0; i<NUM_MODES; ++i) phi[i] = new double[NUM+2];
+
 	//same as above, at new timestep
 
 	U = new double*[2];
@@ -118,6 +130,9 @@ void allocateMemory() {
 	Pirr = new double[NUM+2];
 	Piee = new double[NUM+2];
 
+	//critical mode
+  Phi = new double*[NUM_MODES];
+  for(int i=0; i<NUM_MODES; ++i) Phi[i] = new double[NUM+2];
 
 	//for convenience only
 
@@ -144,6 +159,9 @@ void cleanup()
   delete [] Pirr;
   delete [] piee;
   delete [] Piee;
+
+	delete [] phi;
+  delete [] Phi;
 }
 
 // enforces vN boundary conditions by explicitly copying values into the padding elements (not used)
@@ -163,28 +181,13 @@ void enforceVNBCs()
 
   piee[0]=piee[1];
   piee[NUM+1]=piee[NUM];
+
+	for(int i=0; i<NUM_MODES; ++i)
+  {
+    phi[i][0]=phi[i][1];
+    phi[i][NUM+1]=phi[i][NUM];
+  }
 }
-
-//enforce periodic BCs (not used)
-void enforcePBCs()
-{
-  for (int i=0;i<2;i++)
-    {
-      u[i][0]=u[i][NUM];
-      u[i][NUM+1]=u[i][1];     
-    }
-
-  e[0]=e[NUM];
-  e[NUM+1]=e[1];
-
-  pirr[0]=pirr[NUM];
-  pirr[NUM+1]=pirr[1];
-
-  piee[0]=piee[NUM];
-  piee[NUM+1]=piee[1];
-}
-
-
 
 void enforceBCs()
 {
@@ -199,6 +202,7 @@ void copyDown() {
 for (int s=1;s<=NUM;s++) 
   {
     for (int i=0;i<2;i++) u[i][s]=U[i][s];
+		for(int i=0; i<NUM_MODES; ++i) phi[i][s] = Phi[i][s];
     e[s]=E[s];
     pirr[s]=Pirr[s];
     piee[s]=Piee[s];
@@ -224,8 +228,6 @@ void loadeos()
     {
       eosf >> length;
       cout << "Read length of " << length << endl;
-
-      
 
       eoT4 = new double[length];
       cs2i = new double[length];
@@ -519,7 +521,6 @@ double eos(double mye)
 
 }
 
-
 //Speed of Sound squared = dp/depsilon
 
 double cs2(double ed)
@@ -536,8 +537,6 @@ double cs2(double ed)
   //return cs2i[j]+globalx*(cs2i[j+1]-cs2i[j]);
   return cs2i[j];
 }
-
-
 
 //Spatial derivatives
 //I'm using a naive version which might be enough 
@@ -800,7 +799,8 @@ void Deltatdmupi(double *result,int site)
 #include "diags.cpp"
 
 //main update routine -- this is the core of the code
-inline void doInc(double eps) {
+inline void doInc(double eps) 
+{
   double th[4],nbrr[4],nbee[4],nbpp[4],dpit[4],dpir[4],dtpirr[4];
   double vr=0.0;
 
@@ -903,51 +903,48 @@ inline void doInc(double eps) {
       check=gaussj(dtmat,3,rhs,1);
 
       if (check==0)
-	{
-      for (int i=0;i<2;i++)
-	U[i][s]=u[i][s]+eps*rhs[i][0];
+					{
+							for (int i=0;i<2;i++)
+					U[i][s]=u[i][s]+eps*rhs[i][0];
 
-      //for debugging
-      //this gets rid of extra dof explicitely
-      //U[0][s]=sqrt(1+U[1][s]*U[1][s]);
-      
-      E[s]=e[s]+eps*rhs[2][0];
+							//for debugging
+							//this gets rid of extra dof explicitely
+							//U[0][s]=sqrt(1+U[1][s]*U[1][s]);
+							
+							E[s]=e[s]+eps*rhs[2][0];
 
-      Pirr[s]=pirr[s]+eps*(dtpirr[0]*rhs[0][0]+dtpirr[1]*rhs[1][0]+dtpirr[2]*rhs[2][0]+dtpirr[3]);
+							Pirr[s]=pirr[s]+eps*(dtpirr[0]*rhs[0][0]+dtpirr[1]*rhs[1][0]+dtpirr[2]*rhs[2][0]+dtpirr[3]);
 
-      
-    
-      Piee[s]=piee[s]+eps/u[0][s]*(-0.5/beta2(s)*(nbee[0]*rhs[0][0]+nbee[1]*rhs[1][0]+nbee[2]*rhs[2][0]+nbee[3])/t/t-piee[s]/taupi(s)-u[1][s]*Drpiee(s));
+							Piee[s]=piee[s]+eps/u[0][s]*(-0.5/beta2(s)*(nbee[0]*rhs[0][0]+nbee[1]*rhs[1][0]+nbee[2]*rhs[2][0]+nbee[3])/t/t-piee[s]/taupi(s)-u[1][s]*Drpiee(s));
 
 
-      //for debugging
-      //if (s==1)
-      //cout << "test:" << dtpirr[3]+0.5/beta2(s)*nbee[3]/t/t-2*u[0][s]*t*piee[s];
-      //cout << " checking: " << dtpirr[3] << " vs. " << 1.0/3.0/beta2(s)/t-pirr[s]/taupi(s) << "\n";
-      //cout << " checking2: " << 0.5/beta2(s)/u[0][s]*nbee[3]/t/t << " vs. " << -2.0/3.0/beta2(s)/t << "\n";
-
-      //cout << "check: " << 2*(dtpirr[0]*rhs[0][0]+dtpirr[1]*rhs[1][0]+dtpirr[2]*rhs[2][0]+dtpirr[3])+t*t/u[0][s]*(0.5/beta2(s)*(nbee[0]*rhs[0][0]+nbee[1]*rhs[1][0]+nbee[2]*rhs[2][0]+nbee[3])/t/t/t/t-piee[s]/taupi(s)-u[1][s]*Drpiee(s)) << endl;
-
-      //Pirr[s]=0.0;
-      //Piee[s]=0.0;
-	}
+					}
       else
-	{
-	  if (wflag==0)
-	    {
-	      cout << "Warning: nan at r = "<< s/5.06842*A << "encountered!" << endl;
-	    wflag=1;
-	    }
-	  for (int i=0;i<2;i++)
-	    U[i][s]=u[i][s];
+					{
+						if (wflag==0)
+							{
+								cout << "Warning: nan at r = "<< s/5.06842*A << "encountered!" << endl;
+							wflag=1;
+							}
+						for (int i=0;i<2;i++)
+							U[i][s]=u[i][s];
 
-	  E[s]=e[s];
+						E[s]=e[s];
 
-	  Pirr[s]=pirr[s];
+						Pirr[s]=pirr[s];
 
-	  Piee[s]=piee[s];
+						Piee[s]=piee[s];
 
-	}
+					}
+
+			double xiInv;
+      double phi_eq;
+      //if the eos is critical, evolve the phi derivatives
+      if(crit_switch) for(int i=0; i<NUM_MODES; ++i){
+			  xiInv = 1/getintXi();
+        phi_eq = 1/(Q[i]*Q[i]+xiInv*xiInv);
+        Phi[i][s] = phi[i][s] + eps*Dtphi(i,s,phi_eq);
+      }
     }
 }
 
@@ -971,13 +968,12 @@ void Evolve() {
     // measurements and data dump
     if (i==2) 
       {
-	outputMeasurements(t);
+					outputMeasurements(t);
       }
     if ( (i>1 && (i-1)%UPDATE==0)) {
       outputMeasurements(t);
     }
     if ((i-1)%SNAPUPDATE==0) {
-      
       snapshot(t); 
     }
 
@@ -992,11 +988,12 @@ void Evolve() {
 
 
 		// t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
-		if((t*.1973*A > 3.3) && !(crit_switch) && false)
+		if((t*.1973*A > 3.3) && !(crit_switch))
     {
       load_crit_eos();
 			crit_switch = true;
       cout << "Critical eos being used now!!!" << endl;
+			snapshot(t);
     }
   }
 }
