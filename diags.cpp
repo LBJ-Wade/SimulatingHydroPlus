@@ -121,7 +121,7 @@ void snapTprofile(double time)
 {
   fstream out;
   char fname[255];
-  sprintf(fname,"data/snapshot/Tprofile_%.2f.dat",time/5.06842*A);
+  sprintf(fname,"../data/snapshot/Tprofile_%.2f.dat",time/5.06842*A);
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -137,7 +137,7 @@ void snapEDprofile(double time)
 {
   fstream out;
   char fname[255];
-  sprintf(fname,"data/snapshot/edprofile_%.2f.dat",time/5.06842*A);
+  sprintf(fname,"../data/snapshot/edprofile_%.2f.dat",time/5.06842*A);
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {  
@@ -151,7 +151,7 @@ void snapvprofile(double time)
 {
   fstream out;
   char fname[255];
-  sprintf(fname,"data/snapshot/vprofile_%.2f.dat",time/5.06842*A);
+  sprintf(fname,"../data/snapshot/vprofile_%.2f.dat",time/5.06842*A);
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -166,7 +166,7 @@ void snapRinvprofile(double time)
   fstream out;
   char fname[255];
   double vr=0;
-  sprintf(fname,"data/snapshot/Rinvprofile_%.2f.dat",time/5.06842*A);
+  sprintf(fname,"../data/snapshot/Rinvprofile_%.2f.dat",time/5.06842*A);
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -184,7 +184,7 @@ void snappirrprofile(double time)
 {
   fstream out;
   char fname[255];
-  sprintf(fname,"data/snapshot/Pirrprofile_%.2f.dat",time/5.06842*A);
+  sprintf(fname,"../data/snapshot/Pirrprofile_%.2f.dat",time/5.06842*A);
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -201,7 +201,7 @@ void snappieeprofile(double time)
 {
   fstream out;
   char fname[255];
-  sprintf(fname,"data/snapshot/Pieeprofile_%.2f.dat",time/5.06842*A);
+  sprintf(fname,"../data/snapshot/Pieeprofile_%.2f.dat",time/5.06842*A);
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {

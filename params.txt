@@ -23,10 +23,10 @@ UPDATE		400
 SNAPUPDATE	400
 
 //viscosity over entropy
-ETAOS		 0.24
+ETAOS		 0.08
 
 //freeze-out temperature
-TF		0.20
+TF		0.155
 
 //dimensionless value of relaxation time
 COEFF		3.0
