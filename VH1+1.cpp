@@ -55,7 +55,9 @@ double fac = .1973;
 double LAMBDA_M = 1/fac/fac;
 
 // number of phi modes to include
-int NUM_MODES = 100;
+int DEL1 = 5;
+int DEL2 = 30;
+int NUM_MODES = 2*DEL1 + DEL2;
 
 //controls value of tau_Pi
 double COEFF=3.0;
@@ -68,6 +70,7 @@ double **U,*E,*Pirr,*Piee,**Phi;
 
 //overall time
 double t = 0;
+long int counter = 0;
 
 //these are global for convenience; used in doInc
 double **dtmat, **rhs;
@@ -86,13 +89,13 @@ double Rnuc=6.4;
 double anuc=0.54;
 
 
-
 //flags
 int wflag=0;
 int reachedTf=0;
 
 //when true, use the critical equation of state
 bool crit_switch = false;
+bool back_react = true;
 
 // output files
 fstream T_out;
@@ -118,8 +121,8 @@ void allocateMemory() {
 	piee = new double[NUM+2];
 
 	//critical mode
-  phi = new double*[NUM_MODES];
-  for(int i=0; i<NUM_MODES; ++i) phi[i] = new double[NUM+2];
+  //phi = new double*[NUM_MODES];
+  //for(int i=0; i<NUM_MODES; ++i) phi[i] = new double[NUM+2];
 
 	//same as above, at new timestep
 
@@ -131,8 +134,8 @@ void allocateMemory() {
 	Piee = new double[NUM+2];
 
 	//critical mode
-  Phi = new double*[NUM_MODES];
-  for(int i=0; i<NUM_MODES; ++i) Phi[i] = new double[NUM+2];
+  //Phi = new double*[NUM_MODES];
+  //for(int i=0; i<NUM_MODES; ++i) Phi[i] = new double[NUM+2];
 
 	//for convenience only
 
@@ -160,8 +163,11 @@ void cleanup()
   delete [] piee;
   delete [] Piee;
 
-	delete [] phi;
-  delete [] Phi;
+	if(crit_switch)
+	{
+		delete [] phi;
+  	delete [] Phi;
+	}
 }
 
 // enforces vN boundary conditions by explicitly copying values into the padding elements (not used)
@@ -182,11 +188,14 @@ void enforceVNBCs()
   piee[0]=piee[1];
   piee[NUM+1]=piee[NUM];
 
-	for(int i=0; i<NUM_MODES; ++i)
-  {
-    phi[i][0]=phi[i][1];
-    phi[i][NUM+1]=phi[i][NUM];
-  }
+	if(crit_switch)
+	{
+		for(int i=0; i<NUM_MODES; ++i)
+  	{
+    	phi[i][0]=phi[i][1];
+    	phi[i][NUM+1]=phi[i][NUM];
+  	}
+	}
 }
 
 void enforceBCs()
@@ -202,7 +211,7 @@ void copyDown() {
 for (int s=1;s<=NUM;s++) 
   {
     for (int i=0;i<2;i++) u[i][s]=U[i][s];
-		for(int i=0; i<NUM_MODES; ++i) phi[i][s] = Phi[i][s];
+		if(crit_switch) for(int i=0; i<NUM_MODES; ++i) phi[i][s] = Phi[i][s];
     e[s]=E[s];
     pirr[s]=Pirr[s];
     piee[s]=Piee[s];
@@ -279,93 +288,6 @@ double TA(double radius)
   return 2*temp*197./1175.22;
 }
 
-
-//intermediate routine -- used for BC entropy scaling 
-double getsBC(double radius)
-{
-  double temp=0;
-  for (int i=0;i<600;i++)
-    temp+=WS(radius,(i+0.5)*Rnuc/200.)*Rnuc/200.;
-  temp*=temp;
-
-  return temp;
-}
-
-
-//return interpolated temperature in lattice units
-double getintT(int i,double x)
-{
-  return (Ti[i]+x*(Ti[i+1]-Ti[i]))*A;
-}
-
-//takes physical entropy density and gives energy density in lattice units
-double getmyed(double entropy)
-{
-  //find index for this s
-  
-  long int i;
-
-  double temp2;
-  double temp,sim;
-
-  for (i=0;i<length;i++)
-    {
-      if ((eoT4[i]+poT4[i])*Ti[i]*Ti[i]*Ti[i]>entropy)
-	break;
-    }
-
-  if (i>0)
-    {
-      //cout << "\t found T=" << Ti[i-1] << endl;
-      
-      //get fraction
-      
-      
-      sim=(poT4[i-1]+eoT4[i-1])*Ti[i-1]*Ti[i-1]*Ti[i-1];
-      
-      //cout << "\nnext lower entropy " << sim << endl;
-      
-      temp=(poT4[i]+eoT4[i]-poT4[i-1]-eoT4[i-1])*(Ti[i]+Ti[i-1])/2/(Ti[i]-Ti[i-1]);
-      temp+=(poT4[i]+eoT4[i]+poT4[i-1]+eoT4[i-1])/2.*3;
-      temp*=(Ti[i]+Ti[i-1])/2;
-      temp*=(Ti[i]+Ti[i-1])/2;
-      
-      temp=(entropy-sim)/temp;
-      
-      //cout << "fraction: " << temp/(Ti[i]-Ti[i-1]);
-      
-      //cout << "  such that approx temp " << Ti[i-1]+temp << endl;
-      
-      
-      //get energy density
-      temp2=eoT4[i-1]+(eoT4[i]-eoT4[i-1])/(Ti[i]-Ti[i-1])*temp;
-      
-      //multiply by T^4
-      
-      temp=getintT(i-1,temp/(Ti[i]-Ti[i-1]));
-      //cout << "and this is from getint" << temp/A << endl;
-      temp*=temp;
-      temp*=temp;
-      //cout << "furnishing " << temp2*temp << "\n";
-      return temp2*temp;
-    }
-  else
-    {
-      
-      double temp,sim;
-      sim=(poT4[0]+eoT4[0]);
-      temp=pow(entropy/sim,1/3.);
-
-      //cout << "and this from here" << temp << endl;
-      temp*=A;
-      temp*=temp;
-      temp*=temp;
-      //cout << "furnishing new " << eoT4[0]*temp << "\n";
-      return eoT4[0]*temp;
-    }
-  
-}
-
 //number of wounded nucleons
 double getwnuc(double rr)
 {
@@ -390,12 +312,9 @@ void setInitialConditions()
 
   cout << "TSTART=" << TSTART << endl;
 
-
   //load equation of state
 
   loadeos();
-
-  
 
   //convert fm/c to lattice units
   t=TINIT*5.06842/A;
@@ -498,8 +417,30 @@ double getx(long int i,double mye)
   return (mye-eoT4[i]*Ti[i]*Ti[i]*Ti[i]*Ti[i])/temp/(Ti[i+1]-Ti[i]);
 }
 
+//return interpolated temperature in lattice units
+double getintT(int i,double x)
+{
+  return (Ti[i]+x*(Ti[i+1]-Ti[i]))*A;
+}
+
+//provides Temperature*lattice spacing
+double T(int site)
+{
+  //ideal
+  double temp;
+
+  long int j;
+  //j=geti(e[site]);
+  j=globali;
+
+  if (j!=-1)
+    return getintT(globali,globalx);
+  else
+    return sqrt(sqrt(e[site]/eoT4[0]));
+}
+
 //Equation of State; returns p(e)
-double eos(double mye)
+double eos(double mye, int s)
 {
   double temp=0;
 
@@ -507,10 +448,10 @@ double eos(double mye)
 
   if (j!=-1)
     {
-      temp=Ti[j]*A;
+      temp=T(s);
       temp*=temp;
       temp*=temp;
-      temp*=poT4[j];
+      temp*=(poT4[j] + globalx*(poT4[j+1]-poT4[j]));
     }
   else
     {
@@ -655,24 +596,9 @@ void nablaupp(double *result, int site)
 //Provides \beta_2 = tau_Pi/eta/2 \sim 3/4/p
 double beta2(int site)
 {
-  return COEFF/(eos(e[site]))/4;
+  return COEFF/(eos(e[site], site))/4;
 }
 
-//provides Temperature*lattice spacing
-double T(int site)
-{
-  //ideal
-  double temp;
-
-  long int j;
-  //j=geti(e[site]);
-  j=globali;
-
-  if (j!=-1)
-    return getintT(globali,globalx);
-  else
-    return sqrt(sqrt(e[site]/eoT4[0]));
-}
 
 //just some debug routine
 double getfinals()
@@ -801,25 +727,17 @@ void Deltatdmupi(double *result,int site)
 //main update routine -- this is the core of the code
 inline void doInc(double eps) 
 {
-  double th[4],nbrr[4],nbee[4],nbpp[4],dpit[4],dpir[4],dtpirr[4];
+  double th[4],nbrr[4],t4_nbee[4],r4_nbpp[4],dpit[4],dpir[4],dtpirr[4],crit_dtp[4];
+	double pi_phph = 0;
   double vr=0.0;
+	double p, Drp;
 
   int check=0;
-  /*
-   // for debugging
-  cout << "Dumping all u's ";
-  for (int s=1;s<=NUM;s++)
-    cout << "ut = " << u[0][s] << "  ur = " << u[1][s] << endl;
-  */
-
 
   for (int s=1;s<=NUM;s++)
     {
-
       globali=geti(e[s]);
       globalx=getx(globali,e[s]);
-
-      //cout << "\n" << s/5.06842*A << "\t" << T(s)/A << endl;
 
       vr=u[1][s]/u[0][s];
 
@@ -832,8 +750,8 @@ inline void doInc(double eps)
 
       theta(th,s);
       nablaurr(nbrr,s);
-      nablauee(nbee,s);
-      nablaupp(nbpp,s);
+      nablauee(t4_nbee,s);
+      nablaupp(r4_nbpp,s);
       Deltatdmupi(dpit,s);
       Deltardmupi(dpir,s);
       Dtpirr(dtpirr,s);
@@ -849,26 +767,47 @@ inline void doInc(double eps)
       //rhs vector, only first index can differ from 0
       rhs[0][0]=u[1][s]*Dre(s)*(-1.0);
 
-      for (int cc=0;cc<3;cc++)
-	{
-	  dtmat[0][cc]+=(eos(e[s])+e[s])*th[cc];
-	  dtmat[0][cc]+=0.5*pirr[s]*(1-vr*vr)*(1-vr*vr)*nbrr[cc];
-	  dtmat[0][cc]+=0.5*piee[s]*nbee[cc]/t/t;
-	  dtmat[0][cc]-=0.5*(piee[s]+(1-vr*vr)*pirr[s])/(s)/(s)*nbpp[cc];
-	}
-      rhs[0][0]-=(eos(e[s])+e[s])*th[3];
+			if(crit_switch && back_react)
+      {
+        p = crit_eos(e[s], s);
+				crit_dp(Drp, crit_dtp, e[s], s);
+			}
+			else
+			{
+				p = eos(e[s], s);
+        Drp = cs2(e[s])*Dre(s);
+			}
+
+			//D eps
+      pi_phph = -(piee[s] + (1-vr*vr)*pirr[s]);
+
+      rhs[0][0]-=(p+e[s])*th[3];
       rhs[0][0]-=0.5*pirr[s]*(1-vr*vr)*(1-vr*vr)*nbrr[3];
-      rhs[0][0]-=0.5*piee[s]*nbee[3]/t/t;
-      rhs[0][0]+=0.5*(piee[s]+(1-vr*vr)*pirr[s])/(s)/(s)*nbpp[3];
+      rhs[0][0]-=0.5*piee[s]*t4_nbee[3]/t/t;
+			rhs[0][0]-=0.5*pi_phph/(s)/(s)*r4_nbpp[3];
+
+      for (int cc=0;cc<3;cc++)
+			{
+				dtmat[0][cc]+=(p+e[s])*th[cc];
+				dtmat[0][cc]+=0.5*pirr[s]*(1-vr*vr)*(1-vr*vr)*nbrr[cc];
+				dtmat[0][cc]+=0.5*piee[s]*t4_nbee[cc]/t/t;
+				dtmat[0][cc]+=0.5*pi_phph/(s)/(s)*r4_nbpp[cc];
+			}
 
       //this completes the setup for the first equation
 
       //time derivatives in Du^t=...
-      dtmat[1][0]=(eos(e[s])+e[s])*u[0][s];
+      rhs[1][0]=-(p+e[s])*u[1][s]*Dru(0,s);
+      rhs[1][0]-=u[0][s]*u[1][s]*Drp;
+
+      dtmat[1][0]=(p+e[s])*u[0][s];
       dtmat[1][1]=0.0;
-      dtmat[1][2]=cs2(e[s])*(u[0][s]*u[0][s]-1.0);
-      rhs[1][0]=(eos(e[s])+e[s])*u[1][s]*Dru(0,s)*(-1.0);
-      rhs[1][0]-=cs2(e[s])*u[0][s]*u[1][s]*Dre(s);
+			if(crit_switch && back_react)
+      {
+        dtmat[1][2] = -(1-u[0][s]*u[0][s])*crit_dtp[2];
+        rhs[1][0] += (1-u[0][s]*u[0][s])*crit_dtp[3];
+      }
+      else dtmat[1][2]=-cs2(e[s])*(1-u[0][s]*u[0][s]);
 
       dtmat[1][0]+=dpit[0];
       dtmat[1][1]+=dpit[1];
@@ -877,65 +816,54 @@ inline void doInc(double eps)
 
 
       //time derivatives in Du^r=...
-      dtmat[2][0]=0.0;
-      dtmat[2][1]=(eos(e[s])+e[s])*u[0][s];
-      dtmat[2][2]=u[0][s]*u[1][s]*cs2(e[s]);
-      rhs[2][0]=(eos(e[s])+e[s])*u[1][s]*Dru(1,s)*(-1.0);
-      rhs[2][0]-=(1.0+u[1][s]*u[1][s])*cs2(e[s])*Dre(s);
+      rhs[2][0]=-(p+e[s])*u[1][s]*Dru(1,s);
+      rhs[2][0]-=(1.0+u[1][s]*u[1][s])*Drp;
+
+			dtmat[2][0]=0.0;                 //Derivative of u_t
+      dtmat[2][1]=(p+e[s])*u[0][s];    //Derivative of u_r
+			if(crit_switch && back_react)
+      {
+        dtmat[2][2] = u[0][s]*u[1][s]*crit_dtp[2];
+        rhs[2][0] -= u[0][s]*u[1][s]*crit_dtp[3];
+      }
+      else dtmat[2][2]=u[0][s]*u[1][s]*cs2(e[s]);
 
       dtmat[2][0]+=dpir[0];
       dtmat[2][1]+=dpir[1];
       dtmat[2][2]+=dpir[2];
       rhs[2][0]-=dpir[3];
 
-      /*
-       //just for debugging
-      cout << "jff2: " << s << "\n";
-      cout << dtmat[0][0] << "\t" << dtmat[0][1] <<"\t" << dtmat[0][2] << "\t" << rhs[0][0] << endl;
-      cout << dtmat[1][0] << "\t" << dtmat[1][1] <<"\t" << dtmat[1][2] << "\t" << rhs[1][0] << endl;
-      cout << dtmat[2][0] << "\t" << dtmat[2][1] <<"\t" << dtmat[2][2] << "\t" << rhs[2][0] << endl;
-      //cout << "th: " << 0.5*(piee[s]+(1-vr*vr)*pirr[s])/(s)/(s)*nbpp[0] << "\n";
-      //cout << "\n\n";
-      //cout << "p: " << p[0] << " " << p[1] << "\n";
-      */
-      
-
       check=gaussj(dtmat,3,rhs,1);
 
       if (check==0)
-					{
-							for (int i=0;i<2;i++)
-					U[i][s]=u[i][s]+eps*rhs[i][0];
+			{
+				for (int i=0;i<2;i++) U[i][s]=u[i][s]+eps*rhs[i][0];
 
-							//for debugging
-							//this gets rid of extra dof explicitely
-							//U[0][s]=sqrt(1+U[1][s]*U[1][s]);
-							
-							E[s]=e[s]+eps*rhs[2][0];
-
-							Pirr[s]=pirr[s]+eps*(dtpirr[0]*rhs[0][0]+dtpirr[1]*rhs[1][0]+dtpirr[2]*rhs[2][0]+dtpirr[3]);
-
-							Piee[s]=piee[s]+eps/u[0][s]*(-0.5/beta2(s)*(nbee[0]*rhs[0][0]+nbee[1]*rhs[1][0]+nbee[2]*rhs[2][0]+nbee[3])/t/t-piee[s]/taupi(s)-u[1][s]*Drpiee(s));
-
-
-					}
+				//for debugging
+				//this gets rid of extra dof explicitely
+				//U[0][s]=sqrt(1+U[1][s]*U[1][s]);
+			
+				E[s]=e[s]+eps*rhs[2][0];
+				Pirr[s]=pirr[s]+eps*(dtpirr[0]*rhs[0][0]+dtpirr[1]*rhs[1][0]+dtpirr[2]*rhs[2][0]+dtpirr[3]);
+				Piee[s]=piee[s]+eps/u[0][s]*(-0.5/beta2(s)*(t4_nbee[0]*rhs[0][0]+t4_nbee[1]*rhs[1][0]+t4_nbee[2]*rhs[2][0]+t4_nbee[3])/t/t
+												-piee[s]/taupi(s)-u[1][s]*Drpiee(s));
+			}
       else
-					{
-						if (wflag==0)
-							{
-								cout << "Warning: nan at r = "<< s/5.06842*A << "encountered!" << endl;
-							wflag=1;
-							}
-						for (int i=0;i<2;i++)
-							U[i][s]=u[i][s];
-
-						E[s]=e[s];
-
-						Pirr[s]=pirr[s];
-
-						Piee[s]=piee[s];
-
-					}
+			{
+				if (wflag==0)
+				{
+					cout << "Warning: nan at r = "<< s/5.06842*A << "encountered!" << endl;
+					cout << "u, Dru, vr: " << u[0][s] << "\t" << u[1][s] << "\t" << Dru(0,s) << "\t" << Dru(1,s) << "\t" << vr << endl;
+          cout << "p, e, Dre, cs2: " << p << "\t" << e[s] << "\t" << Dre(s) << "\t" << cs2(e[s]) << endl;
+          cout << "pirr, piee, dpit, dpirr: " << pirr[s] << "\t" << piee[s] << "\t" << dpit[3] << "\t" << dpir[3] << endl;
+          cout << "nbrr, nbee, nbpp, theta: " << nbrr[3] << "\t" << t4_nbee[3] << "\t" << r4_nbpp[3] << "\t" << th[3] << endl;
+					wflag=1;
+				}
+				for (int i=0;i<2;i++) U[i][s]=u[i][s];
+				E[s]=e[s];
+				Pirr[s]=pirr[s];
+				Piee[s]=piee[s];
+			}
 
 			double xiInv;
       double phi_eq;
@@ -948,36 +876,21 @@ inline void doInc(double eps)
     }
 }
 
-
-
-
-
 //main driver routine
 void Evolve() {
   
   //setting step sizes to maximum step size
   double eps = EPS;
   long int i=0;
-  //for (long int i=1;i<=STEPS;i++) {
   while((reachedTf==0)&&(wflag==0)) {
     i++;
     // evolve fields eps forward in time storing updated fields in captial vars
-
     doInc(eps); 
 
     // measurements and data dump
-    if (i==2) 
-      {
-					outputMeasurements(t);
-      }
-    if ( (i>1 && (i-1)%UPDATE==0)) {
-      outputMeasurements(t);
-    }
-    if ((i-1)%SNAPUPDATE==0) {
-      snapshot(t); 
-    }
-
-		
+    if (i==2)                      outputMeasurements(t);
+    if ( (i>1 && (i-1)%UPDATE==0)) outputMeasurements(t);
+    if ((i-1)%SNAPUPDATE==0)       snapshot(t); 
 		
 		//copy fields from capital vars to lowercase vars
 		copyDown();
@@ -985,6 +898,7 @@ void Evolve() {
 		
 		// increment time
 		t += eps;
+		counter++;
 
 
 		// t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
@@ -993,6 +907,7 @@ void Evolve() {
       load_crit_eos();
 			crit_switch = true;
       cout << "Critical eos being used now!!!" << endl;
+			if(back_react) cout << "With back reaction!!" << endl;
 			snapshot(t);
     }
   }
@@ -1014,7 +929,6 @@ int main() {
 	printDivider();
 	
 	readParameters("params.txt");
-	
 
 	printDivider();
 
@@ -1028,8 +942,6 @@ int main() {
 
 	cout << "check viol init: " << consistcheck1(1) << endl;
 
-	//snapshot(otime);
-	
 	printDivider();
 
 	cout << "Spatial Step Size (A): " << A << endl;
@@ -1086,7 +998,3 @@ int main() {
 
 	return 0;
 }
-
-/*
-Change-Log: v0.1: (15.2.2007): Bug in Dtpirr routine fixed
-*/

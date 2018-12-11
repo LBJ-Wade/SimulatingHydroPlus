@@ -105,11 +105,11 @@ void outputMeasurements(double t)
   freeze_out << fsite/5.06842*A << "\t" << t/5.06842*A << "\t";
   freeze_out << u[0][fsite] << "\t";
   freeze_out << u[1][fsite] << "\t";
-  freeze_out << pirr[fsite]/(e[fsite]+eos(e[fsite])) << "\t";
-  freeze_out << piee[fsite]/(e[fsite]+eos(e[fsite])) << "\t";
-  freeze_out << eos(e[fsite])/(A*A*A*A) << "\t";
-  freeze_out << fabs(pirr[fsite]*3*vr*vr-piee[fsite])/(eos(e[fsite])+e[fsite])/4 << "\t";
-  freeze_out << 1/sqrt(fabs(pirr[fsite]*3*vr*vr-piee[fsite])/(eos(e[fsite])+e[fsite])/4)*T(fsite)/A << "\t";
+  freeze_out << pirr[fsite]/(e[fsite]+eos(e[fsite], fsite)) << "\t";
+  freeze_out << piee[fsite]/(e[fsite]+eos(e[fsite], fsite)) << "\t";
+  freeze_out << eos(e[fsite], fsite)/(A*A*A*A) << "\t";
+  freeze_out << fabs(pirr[fsite]*3*vr*vr-piee[fsite])/(eos(e[fsite], fsite)+e[fsite])/4 << "\t";
+  freeze_out << 1/sqrt(fabs(pirr[fsite]*3*vr*vr-piee[fsite])/(eos(e[fsite], fsite)+e[fsite])/4)*T(fsite)/A << "\t";
   freeze_out << T(fsite)/A << "\t";
   freeze_out << (eoT4[globali]+poT4[globali])*T(fsite)*T(fsite)*T(fsite)*fsite*t/A << endl;
 
@@ -174,7 +174,7 @@ void snapRinvprofile(double time)
     globalx=getx(globali,e[s]);
     vr=u[1][s]/u[0][s];
     out << s/5.06842*A << "\t";
-    out << fabs(pirr[s]*3*vr*vr-piee[s])/(eos(e[s])+e[s])/4 << endl;
+    out << fabs(pirr[s]*3*vr*vr-piee[s])/(eos(e[s], s)+e[s])/4 << endl;
   }
   out.close();
 }
@@ -191,7 +191,7 @@ void snappirrprofile(double time)
     globali=geti(e[s]);
     globalx=getx(globali,e[s]);
     out << s/5.06842*A << "\t";
-    out << pirr[s]/(eos(e[s])+e[s]) << "\t";
+    out << pirr[s]/(eos(e[s], s)+e[s]) << "\t";
     out	<< pirr[s] << endl;
   }
   out.close();
@@ -208,7 +208,7 @@ void snappieeprofile(double time)
     globali=geti(e[s]);
     globalx=getx(globali,e[s]);
     out << s/5.06842*A << "\t";
-    out << piee[s]/(eos(e[s])+e[s]) << "\t";
+    out << piee[s]/(eos(e[s], s)+e[s]) << "\t";
     out	<< piee[s] << endl;
   }
   out.close();
@@ -221,24 +221,60 @@ void snapPhiprofile(double time)
   char fname[255];
   sprintf(fname,"../data/snapshot/Lam%.1f_Phiprofile_%.3f.dat", LAMBDA_M, time/5.06842*A);
   out.open(fname, ios::out);
-  double phi_eq, xiInv;
+
+  fstream out2;
+  char fname2[255];
+  sprintf(fname2,"../data/snapshot/entropyCorrection_%.3f.dat", time/5.06842*A);
+  out2.open(fname2, ios::out);
+
+  double phi_eq, xiInv, entropy, measure;
   for (int s=1;s<=NUM;s++)
   {
     globali=geti(e[s]);
     globalx=getx(globali,e[s]);
     xiInv = 1/getintXi();
+		double ds=0;
     out << s/5.06842*A << "\t";
-    //out << LAMBDA_M << "\t" << NUM_MODES << "\t";
+
     for(int i=0; i<NUM_MODES; ++i)
     {
       phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
+			measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
+      ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
       //else phi_eq = globalx*1.;
       out << Q[i] << "\t" << phi_eq << "\t" << phi[i][s] << "\t";
+			if(i<5 && false)
+			{
+				printf("contribution %e, %e, %e\n", measure, log(phi[i][s]/phi_eq), phi[i][s]);
+			}
     }
+		entropy = (e[s] + eos(e[s], s))/T(s);
+		out2 << s*fac*A << "\t" << ds/entropy << endl;
     out << endl;
   }
   out.close();
+	out2.close();
+}
+
+void snapPplusProfile(double time)
+{
+  if(crit_switch && back_react)
+  {
+    fstream out;
+    char fname[255];
+    sprintf(fname,"../data/snapshot/pplusprofile_%.3f.dat",time/5.06842*A);
+    out.open(fname, ios::out);
+    double fac = 1/A/A/A/A/A;
+    for (int s=1;s<=NUM;s++)
+    {
+			globali = geti(e[s]);
+			globalx = getx(globali, e[s]);
+      out << s/5.06842*A << "\t";
+      out << eos(e[s], s)/A/A/A/A << "\t" << crit_eos(e[s], s)/A/A/A/A << "\t" << globalx << endl;//<< "\t" << crit_Drp(e[s],s)*fac << endl;
+    }
+    out.close();
+  }
 }
 
 void snapshot(double time)
@@ -247,7 +283,12 @@ void snapshot(double time)
   snapvprofile(time);
   snapRinvprofile(time);
   snapEDprofile(time);
-  if(crit_switch) snapPhiprofile(time);
+  if(crit_switch) 
+	{
+		snapPhiprofile(time);
+		snapPplusProfile(time);
+	}
+
   //snappirrprofile(time);
   //snappieeprofile(time);
 }

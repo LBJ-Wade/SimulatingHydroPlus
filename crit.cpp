@@ -16,14 +16,28 @@ void load_crit_eos()
 {
   fstream eosf2;
   eosf2.open("gregRyanEOS_backReact.dat", ios::in);
+
+	double Qinv[2*DEL1+DEL2];
+	for(int i = 0; i<DEL1; ++i) Qinv[i] = 512.*fac*A - i*(512.*fac*A - 6.)/DEL1;
+	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = 6. - i*(6.-1.)/DEL2;
+	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = 1. - i/DEL1;
+
 	Q = new double[NUM_MODES];
 	dQ = new double[NUM_MODES];
 
+  phi = new double*[NUM_MODES];
+  for(int i=0; i<NUM_MODES; ++i) phi[i] = new double[NUM+2];
+
+	Phi = new double*[NUM_MODES];
+  for(int i=0; i<NUM_MODES; ++i) Phi[i] = new double[NUM+2];
+	
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    Q[j] = 2*M_PI*(j+0)/NUM;//*fac;//!!!
+    //Q[j] = 2*M_PI*(j+0)/NUM;//*fac;//!!!
+		Q[j] = fac*A/Qinv[j];
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
+		//printf("%e %e\n", Q[j], dQ[j]);
   }
   dQ[0] = dQ[1];
 
@@ -58,14 +72,13 @@ void load_crit_eos()
   else cout << "Could not open EOS file" << endl;
 }
 
-#if 0
 //return interpolated d xi/d eps in lattice units
 double getint_dXi(int site)
 {
   double result;
 	double a = 113.425, c = 14.3269;
-  long int i = geti(e[site]);
-	double x = getx(i, e[site]);
+	long int i = globali;
+	double x = globalx;
   if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
 	else result = exp(a*T(site)/A - c);
   return result/fac;
@@ -76,26 +89,15 @@ double getint_d2Xi(int site)
 {
   double result;
 	double a = 57.0826, c = 6.29069;
-  long int i = geti(e[site]);
-	double x = getx(i, e[site]);
   double norm_fac = 1/(A*A*A*A);
+	long int i = globali;
+	double x = globalx;
   norm_fac *= norm_fac/A;
 
   if(i!=-1) result = (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
 	else result = exp(a*T(site)/A - c);
   return result/fac;
 }
-
-//return interpolated specific heat in lattice units
-double getint_cv(int site)
-{
-  long int i = globali;
-
-  if(i!=-1) return (c_v[i]+globalx*(c_v[i+1]-c_v[i]))/(A*A*A);
-  else return 820*T(site)*T(site)*T(site)/(A*A*A);
-}
-#endif 
-
 
 /* p_(+) and derivatives of p_(+) and critical modes phi[i] */
 
@@ -117,13 +119,12 @@ double Dtphi(int i, int site, double phi_eq)
   return -u[1][site]/u[0][site]*Drphi(i,site) - LAMBDA_M/u[0][site] * phi_eq/phi[i][site] * (1 - phi_eq/phi[i][site]);
 }
 
-#if 0
 //returns p_(+)(e)
 double crit_eos(double mye, int s)
 {
   double result=0, measure=0;
   double ds=0, db=0; //contributions from s_(+) and \beta_(+)
-  double xiInv = 1/getintXi(s);
+  double xiInv = 1/getintXi();
   double phi_eq, phi_p; //d phi_eq / d \epsilon
 
   long int j=globali;
@@ -158,7 +159,7 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
 
   double measure=0, dpde=0;
   double ds=0, db=0; //contributions from s_(+) and \beta_(+)
-  double xiInv = 1/getintXi(s), xi_p = getint_dXi(s), xi_pp = getint_d2Xi(s);
+  double xiInv = 1/getintXi(), xi_p = getint_dXi(s), xi_pp = getint_d2Xi(s);
   double phi_eq, phi_p, phi_pp; //d phi_eq / d \epsilon
 
   for(int i=0; i<NUM_MODES; ++i)
@@ -198,4 +199,3 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
 	//printf("%e %e\n", dpdr, result[3]);
 	//if(counter%10==0) abort();
 }
-#endif
