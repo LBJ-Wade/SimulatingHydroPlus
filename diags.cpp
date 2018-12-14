@@ -257,6 +257,34 @@ void snapPhiprofile(double time)
 	out2.close();
 }
 
+void snapPhiContributions(double time)
+{
+	//Good for figuring out if the hydro+ integrals are converging
+  fstream out;
+  char fname[255];
+  sprintf(fname,"../data/snapshot/phiprofileContribution_%.3f.dat", time/5.06842*A);
+  out.open(fname, ios::out);
+
+  double phi_eq, xiInv, entropy, measure, ds;
+  for (int s=1;s<=NUM;s++)
+  {
+    globali=geti(e[s]);
+    globalx=getx(globali,e[s]);
+    xiInv = 1/getintXi();
+    out << s/5.06842*A << "\t";
+
+		entropy = (e[s] + eos(e[s], s))/T(s);
+    for(int i=0; i<NUM_MODES; ++i)
+    {
+      phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
+			measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
+      ds = .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
+      out << ds/entropy << "\t";
+    }
+    out << endl;
+  }
+  out.close();
+}
 void snapPplusProfile(double time)
 {
   if(crit_switch && back_react)
@@ -286,6 +314,7 @@ void snapshot(double time)
   if(crit_switch) 
 	{
 		snapPhiprofile(time);
+		snapPhiContributions(time);
 		snapPplusProfile(time);
 	}
 

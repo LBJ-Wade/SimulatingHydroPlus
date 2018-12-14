@@ -56,7 +56,7 @@ double LAMBDA_M = 1/fac/fac;
 
 // number of phi modes to include
 int DEL1 = 5;
-int DEL2 = 30;
+int DEL2 = 90;
 int NUM_MODES = 2*DEL1 + DEL2;
 
 //controls value of tau_Pi

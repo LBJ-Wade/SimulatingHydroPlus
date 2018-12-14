@@ -17,9 +17,10 @@ void load_crit_eos()
   fstream eosf2;
   eosf2.open("gregRyanEOS_backReact.dat", ios::in);
 
-	double Qinv[2*DEL1+DEL2];
+	double Qinv[NUM_MODES];
+	//for(int i = 0; i<NUM_MODES; ++i) Qinv[i] = 512.*fac*A - i*(512.*fac*A - 0.)/(NUM_MODES);
 	for(int i = 0; i<DEL1; ++i) Qinv[i] = 512.*fac*A - i*(512.*fac*A - 6.)/DEL1;
-	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = 6. - i*(6.-1.)/DEL2;
+	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = 6. - i*(6.-0.5)/DEL2;
 	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = 1. - i/DEL1;
 
 	Q = new double[NUM_MODES];
