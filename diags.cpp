@@ -120,8 +120,9 @@ void outputMeasurements(double t)
 void snapTprofile(double time)
 {
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/Tprofile_%.2f.dat",time/5.06842*A);
+  //char fname[255];
+  //sprintf(fname,"../data/snapshot/Tprofile_%.2f.dat",time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Tprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -136,8 +137,9 @@ void snapTprofile(double time)
 void snapEDprofile(double time)
 {
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/edprofile_%.2f.dat",time/5.06842*A);
+  //char fname[255];
+  //sprintf(fname,"../data/snapshot/edprofile_%.2f.dat",time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/edprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {  
@@ -150,8 +152,9 @@ void snapEDprofile(double time)
 void snapvprofile(double time)
 {
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/vprofile_%.2f.dat",time/5.06842*A);
+  //char fname[255];
+  //sprintf(fname,"../data/snapshot/vprofile_%.2f.dat",time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/vprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -164,9 +167,10 @@ void snapvprofile(double time)
 void snapRinvprofile(double time)
 {
   fstream out;
-  char fname[255];
+  //char fname[255];
   double vr=0;
-  sprintf(fname,"../data/snapshot/Rinvprofile_%.2f.dat",time/5.06842*A);
+  //sprintf(fname,"../data/snapshot/Rinvprofile_%.2f.dat",time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Rinvprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -183,8 +187,9 @@ void snapRinvprofile(double time)
 void snappirrprofile(double time)
 {
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/Pirrprofile_%.2f.dat",time/5.06842*A);
+  //char fname[255];
+  //sprintf(fname,"../data/snapshot/Pirrprofile_%.2f.dat",time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Pirrprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -200,8 +205,9 @@ void snappirrprofile(double time)
 void snappieeprofile(double time)
 {
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/Pieeprofile_%.2f.dat",time/5.06842*A);
+  //char fname[255];
+  //sprintf(fname,"../data/snapshot/Pieeprofile_%.2f.dat",time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Pieeprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
   for (int s=1;s<=NUM;s++)
   {
@@ -218,13 +224,15 @@ void snapPhiprofile(double time)
 {
   //if(time>10.77) printf("\n Inside Man!!! \n");
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/Lam%.1f_Phiprofile_%.3f.dat", LAMBDA_M, time/5.06842*A);
+  //char fname[255];
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Lam").append(to_string(LAMBDA_M).substr(0,4)).append("Phiprofile_").append(to_string(time/5.06842*A)).append(".dat");
+  //sprintf(fname,"../data/snapshot/Lam%.1f_Phiprofile_%.3f.dat", LAMBDA_M, time/5.06842*A);
   out.open(fname, ios::out);
 
   fstream out2;
-  char fname2[255];
-  sprintf(fname2,"../data/snapshot/entropyCorrection_%.3f.dat", time/5.06842*A);
+  //char fname2[255];
+  //sprintf(fname2,"../data/snapshot/entropyCorrection_%.3f.dat", time/5.06842*A);
+  string fname2 = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/entropyCorrection_").append(to_string(time/5.06842*A)).append(".dat");
   out2.open(fname2, ios::out);
 
   double phi_eq, xiInv, entropy, measure;
@@ -261,8 +269,9 @@ void snapPhiContributions(double time)
 {
 	//Good for figuring out if the hydro+ integrals are converging
   fstream out;
-  char fname[255];
-  sprintf(fname,"../data/snapshot/phiprofileContribution_%.3f.dat", time/5.06842*A);
+  //char fname[255];
+  //sprintf(fname,"../data/snapshot/phiprofileContribution_%.3f.dat", time/5.06842*A);
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/phiprofileContribution_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
 
   double phi_eq, xiInv, entropy, measure, ds;
@@ -285,13 +294,15 @@ void snapPhiContributions(double time)
   }
   out.close();
 }
+
 void snapPplusProfile(double time)
 {
   if(crit_switch && back_react)
   {
     fstream out;
-    char fname[255];
-    sprintf(fname,"../data/snapshot/pplusprofile_%.3f.dat",time/5.06842*A);
+    //char fname[255];
+    string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/pplusprofile_").append(to_string(time/5.06842*A)).append(".dat");
+		cout << fname;
     out.open(fname, ios::out);
     double fac = 1/A/A/A/A/A;
     for (int s=1;s<=NUM;s++)

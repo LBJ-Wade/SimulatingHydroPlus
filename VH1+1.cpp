@@ -46,13 +46,17 @@ using namespace std;
 int    NUM=20, UPDATE=100,SNAPUPDATE=1000;
 long int STEPS=40000;
 double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15,TSTART=0.2;
+double AL=0.5, AH=1.0, DT=0.2, XM=5.0, TL=0.8, TH=1.2;
 int whichdisc=0;
 
+// where the output should be stored
+string out_dir;
+
 //converts from fm^-1 GeV: 1 fm^-1 = fac*GeV
-double fac = .1973;
+double fac = 1;//.1973;
 
 // controls rate of phi relaxation
-double LAMBDA_M = 1/fac/fac;
+double LAMBDA_M = 10/fac/fac;
 
 // number of phi modes to include
 int DEL1 = 5;
@@ -95,7 +99,7 @@ int reachedTf=0;
 
 //when true, use the critical equation of state
 bool crit_switch = false;
-bool back_react = true;
+bool back_react = false;
 
 // output files
 fstream T_out;
@@ -225,7 +229,7 @@ void loadeos()
   fstream eosf;
 
   //ideal equation of state
-  eosf.open("idEOS.dat", ios::in);
+  eosf.open("idEOSrich.dat", ios::in);
 
   //qcd equation of state from Mikko Laine and York Schroeder, 
   //hep-ph/0603048
@@ -249,12 +253,12 @@ void loadeos()
       c_v = new double[length];
 
       for (int i=1;i<=length;i++)
-					{
-						eosf >> Ti[i-1];
-						eosf >> eoT4[i-1];
-						eosf >> poT4[i-1];
-						eosf >> cs2i[i-1];
-					}
+      {
+	      eosf >> Ti[i-1];
+	      eosf >> eoT4[i-1];
+	      eosf >> poT4[i-1];
+	      eosf >> cs2i[i-1];
+      }
 
       eosf.close();
     }
@@ -892,23 +896,23 @@ void Evolve() {
     if ( (i>1 && (i-1)%UPDATE==0)) outputMeasurements(t);
     if ((i-1)%SNAPUPDATE==0)       snapshot(t); 
 		
-		//copy fields from capital vars to lowercase vars
-		copyDown();
+    //copy fields from capital vars to lowercase vars
+    copyDown();
 		
 		
-		// increment time
-		t += eps;
-		counter++;
+    // increment time
+    t += eps;
+    counter++;
 
 
-		// t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
-		if((t*.1973*A > 3.3) && !(crit_switch))
+    // t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
+    if((t*.1973*A > 3.3) && !(crit_switch))
     {
       load_crit_eos();
-			crit_switch = true;
+         crit_switch = true;
       cout << "Critical eos being used now!!!" << endl;
-			if(back_react) cout << "With back reaction!!" << endl;
-			snapshot(t);
+         if(back_react) cout << "With back reaction!!" << endl;
+            snapshot(t);
     }
   }
 }
@@ -929,6 +933,8 @@ int main() {
 	printDivider();
 	
 	readParameters("params.txt");
+
+	set_output_string(out_dir);
 
 	printDivider();
 

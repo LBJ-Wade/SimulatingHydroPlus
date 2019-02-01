@@ -3,19 +3,59 @@
 //return interpolated correlation length in lattice units
 double getintXi()
 {
-	//xi is stored in fm.  So we must multiply by 1 = (fac GeV fm)^-1, i.e. divide by fac
+	//xi used to be stored in fm.  So we multiplied by 1 = (fac GeV fm)^-1, i.e. divide by fac, but now we set fac to 1.
   double result;
   long int i = globali;
 	double x = globalx;
   if(i!=-1) result = (xi[i]+x*(xi[i+1]-xi[i]))/A;
-  else result = 1/A;
+  //else result = 1/A;
+  else result = xi[0]/A;
   return result/fac;
 } 
+
+string label(string title, string element, double num)
+{
+  int expo = floor(log10(num));
+  double dig = floor(num/pow(10.,expo));
+  double remainder = num/pow(10.,expo) - dig;
+	//control for numerical precision problems
+	if(abs(remainder-1) <= .00001)
+	{
+		dig = dig+1;
+		remainder = 0;
+	}
+	int int_dig = dig;
+
+  if(remainder == 0) return title.append("_").append(element).append("_").append(to_string(int_dig)).append("e").append(to_string(expo));
+  else
+  {
+    string remain = to_string(remainder);
+    remain.erase(remain.find_last_not_of('0') + 1, string::npos);
+    remain.erase(0,1);
+    return title.append("_").append(element).append("_").append(to_string(int_dig)).append(remain).append("e").append(to_string(expo));
+  }
+}
+
+void set_output_string(string &dir)
+{
+	string str = string("");
+	str = label(str, "aL", AL);
+	str = label(str, "aH", AH);
+	str = label(str, "dT", DT);
+	str = label(str, "Xm", XM);
+	str = label(str, "TL", TL);
+	str = label(str, "TH", TH);
+	if(back_react) str = str.append("/with_backreaction");
+	else str = str.append("/without_backreaction");
+	dir = str;
+	cout << "outputing to " << dir << endl;
+}
 
 void load_crit_eos()
 {
   fstream eosf2;
-  eosf2.open("gregRyanEOS_backReact.dat", ios::in);
+  //eosf2.open("gregRyanEOS_backReact.dat", ios::in);
+  eosf2.open(string("richEOS").append(out_dir).append(".dat"), ios::in);
 
 	double Qinv[NUM_MODES];
 	//for(int i = 0; i<NUM_MODES; ++i) Qinv[i] = 512.*fac*A - i*(512.*fac*A - 0.)/(NUM_MODES);
@@ -36,7 +76,7 @@ void load_crit_eos()
   for(int j=0; j<NUM_MODES; ++j)
   {
     //Q[j] = 2*M_PI*(j+0)/NUM;//*fac;//!!!
-		Q[j] = fac*A/Qinv[j];
+    Q[j] = fac*A/Qinv[j];
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
 		//printf("%e %e\n", Q[j], dQ[j]);
   }
@@ -77,11 +117,13 @@ void load_crit_eos()
 double getint_dXi(int site)
 {
   double result;
-	double a = 113.425, c = 14.3269;
-	long int i = globali;
-	double x = globalx;
-  if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))/(A*A*A*A*A);
-	else result = exp(a*T(site)/A - c);
+  double a = 113.425, c = 14.3269;
+  long int i = globali;
+  double x = globalx;
+  double norm_fac = 1/(A*A*A*A*A*fac*fac*fac*fac*fac);
+  if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))*norm_fac;
+	//else result = exp(a*T(site)/A - c);
+  else result = dXi[0]*fac;
   return result/fac;
 }
 
@@ -89,15 +131,16 @@ double getint_dXi(int site)
 double getint_d2Xi(int site)
 {
   double result;
-	double a = 57.0826, c = 6.29069;
-  double norm_fac = 1/(A*A*A*A);
-	long int i = globali;
-	double x = globalx;
-  norm_fac *= norm_fac/A;
+  double a = 57.0826, c = 6.29069;
+  double norm_fac = 1/(A*A*A*A*fac*fac*fac*fac);
+  long int i = globali;
+  double x = globalx;
+  norm_fac *= norm_fac/A/fac;
 
   if(i!=-1) result = (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
-	else result = exp(a*T(site)/A - c);
-  return result/fac;
+  //else result = exp(a*T(site)/A - c);
+  else result = d2Xi[0]*norm_fac;
+  return result;
 }
 
 /* p_(+) and derivatives of p_(+) and critical modes phi[i] */

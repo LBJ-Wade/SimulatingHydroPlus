@@ -8,6 +8,7 @@
 extern int    NUM,UPDATE,SNAPUPDATE;
 extern long int STEPS;
 extern double A,EPS,TINIT,ETAOS,TF,TSTART,COEFF;
+extern double LAMBDA_M, AL, AH, DT, XM, TL, TH;
 
 using namespace std;
 
@@ -27,6 +28,13 @@ void setParameter(char *key, char *value) {
 	if (strcmp(key,"ETAOS")==0) ETAOS=atof(value);
 	if (strcmp(key,"TF")==0) TF=atof(value);
 	if (strcmp(key,"TSTART")==0) TSTART=atof(value);
+	if (strcmp(key,"LAMBDA_M")==0) LAMBDA_M=atof(value);
+	if (strcmp(key,"AL")==0) AL=atof(value);
+	if (strcmp(key,"AH")==0) AH=atof(value);
+	if (strcmp(key,"DT")==0) DT=atof(value);
+	if (strcmp(key,"XM")==0) XM=atof(value);
+	if (strcmp(key,"TL")==0) TL=atof(value);
+	if (strcmp(key,"TH")==0) TH=atof(value);
 	return;
 }
 
@@ -43,6 +51,11 @@ void setParameter(char *key, char *value) {
 //
 void readParameters(char *filename) {
 		
+	fstream out;
+  char fname[255];
+  sprintf(fname,"../data/snapshot/info.dat");
+  out.open(fname, ios::out);
+
 	string commentmarker = "//"; 
 	char space = ' '; 
 	char tab = '\t';
@@ -66,10 +79,12 @@ void readParameters(char *filename) {
 			if (strlen(key)>0 && strlen(value)>0) {
 				setParameter(key,value);
 				cout << key << " = " << value << endl;
+				out  << key << " = " << value << endl;
 			}
 		}
 	}
 	
+  out.close();
 	return;	
 }
 

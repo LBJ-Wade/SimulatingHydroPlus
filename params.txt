@@ -28,6 +28,26 @@ ETAOS		 0.08
 //freeze-out temperature
 TF		0.155
 
-//dimensionless value of relaxation time
+//dimensionless value of relaxation time for Israel-Stewart part of the hydro eqns
 COEFF		3.0
 
+//dimensionful value of relaxation time for phi-mode relaxation eqns
+LAMBDA_M        10.0
+
+//low temperature coefficient, p = aL T^4
+AL		0.5
+
+//high temperature coefficient, p = aL T^4
+AH		1.0
+
+//size of the critical region (along the T-axis)
+DT		0.2
+
+//maximum correlation length, xi
+XM		2.0
+
+//switching temperature between low temperature conformal and critical eos
+TL		0.8
+
+//switching temperature between high temperature conformal and critical eos
+TH		1.2
