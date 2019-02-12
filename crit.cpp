@@ -3,14 +3,12 @@
 //return interpolated correlation length in lattice units
 double getintXi()
 {
-	//xi used to be stored in fm.  So we multiplied by 1 = (fac GeV fm)^-1, i.e. divide by fac, but now we set fac to 1.
   double result;
   long int i = globali;
 	double x = globalx;
   if(i!=-1) result = (xi[i]+x*(xi[i+1]-xi[i]))/A;
-  //else result = 1/A;
   else result = xi[0]/A;
-  return result/fac;
+  return result;
 } 
 
 string label(string title, string element, double num)
@@ -36,18 +34,19 @@ string label(string title, string element, double num)
   }
 }
 
-void set_output_string(string &dir)
+void set_output_string(string &str, string &dir)
 {
-	string str = string("");
+	str = string("");
+	str = label(str, "Tc", TC);
 	str = label(str, "aL", AL);
 	str = label(str, "aH", AH);
 	str = label(str, "dT", DT);
 	str = label(str, "Xm", XM);
 	str = label(str, "TL", TL);
 	str = label(str, "TH", TH);
-	if(back_react) str = str.append("/with_backreaction");
-	else str = str.append("/without_backreaction");
 	dir = str;
+	if(back_react) dir = dir.append("/with_backreaction");
+	else dir = dir.append("/without_backreaction");
 	cout << "outputing to " << dir << endl;
 }
 
@@ -55,13 +54,15 @@ void load_crit_eos()
 {
   fstream eosf2;
   //eosf2.open("gregRyanEOS_backReact.dat", ios::in);
-  eosf2.open(string("richEOS").append(out_dir).append(".dat"), ios::in);
+	
+	cout << string("EOS/richEOS").append(param_str).append(".dat") << endl;
+  eosf2.open(string("EOS/richEOS").append(param_str).append(".dat"), ios::in);
 
 	double Qinv[NUM_MODES];
-	//for(int i = 0; i<NUM_MODES; ++i) Qinv[i] = 512.*fac*A - i*(512.*fac*A - 0.)/(NUM_MODES);
-	for(int i = 0; i<DEL1; ++i) Qinv[i] = 512.*fac*A - i*(512.*fac*A - 6.)/DEL1;
-	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = 6. - i*(6.-0.5)/DEL2;
-	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = 1. - i/DEL1;
+	double fm_to_lat = 1/.1973/A; //conversion from units of fm to lattice spacing
+	for(int i = 0; i<DEL1; ++i) Qinv[i] = (512.*.1973*A - ((double)i)*(512.*.1973*A - 6.)/(1.* DEL1)) * fm_to_lat;
+	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = (6. - ((double)i)*(6.-0.5)/(1.* DEL2)) * fm_to_lat;
+	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = (0.5 - i*0.5/(1.*DEL1)) * fm_to_lat;
 
 	Q = new double[NUM_MODES];
 	dQ = new double[NUM_MODES];
@@ -75,10 +76,8 @@ void load_crit_eos()
   //phi momenta, midpoint interpolation
   for(int j=0; j<NUM_MODES; ++j)
   {
-    //Q[j] = 2*M_PI*(j+0)/NUM;//*fac;//!!!
-    Q[j] = fac*A/Qinv[j];
+    Q[j] = 1/Qinv[j];
     if(j!=0) dQ[j] = Q[j] - Q[j-1];
-		//printf("%e %e\n", Q[j], dQ[j]);
   }
   dQ[0] = dQ[1];
 
@@ -95,8 +94,6 @@ void load_crit_eos()
     	eosf2 >> xi[i-1];
 			eosf2 >> dXi[i-1];
 			eosf2 >> d2Xi[i-1];
-			// c_v is useless and should be taken out at some point
-			eosf2 >> c_v[i-1];
     }
 
 		//set initial phi to equilibrium value
@@ -120,11 +117,10 @@ double getint_dXi(int site)
   double a = 113.425, c = 14.3269;
   long int i = globali;
   double x = globalx;
-  double norm_fac = 1/(A*A*A*A*A*fac*fac*fac*fac*fac);
+  double norm_fac = 1/(A*A*A*A*A);
   if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))*norm_fac;
-	//else result = exp(a*T(site)/A - c);
-  else result = dXi[0]*fac;
-  return result/fac;
+  else result = dXi[0];
+  return result;
 }
 
 //return interpolated d^2 xi / d eps^2 in lattice units
@@ -132,13 +128,12 @@ double getint_d2Xi(int site)
 {
   double result;
   double a = 57.0826, c = 6.29069;
-  double norm_fac = 1/(A*A*A*A*fac*fac*fac*fac);
+  double norm_fac = 1/(A*A*A*A);
   long int i = globali;
   double x = globalx;
-  norm_fac *= norm_fac/A/fac;
+  norm_fac *= norm_fac/A;
 
   if(i!=-1) result = (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
-  //else result = exp(a*T(site)/A - c);
   else result = d2Xi[0]*norm_fac;
   return result;
 }

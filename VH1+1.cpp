@@ -46,21 +46,18 @@ using namespace std;
 int    NUM=20, UPDATE=100,SNAPUPDATE=1000;
 long int STEPS=40000;
 double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15,TSTART=0.2;
-double AL=0.5, AH=1.0, DT=0.2, XM=5.0, TL=0.8, TH=1.2;
+double TC=0.2, AL=0.5, AH=1.0, DT=0.2, XM=5.0, TL=0.8, TH=1.2;
 int whichdisc=0;
 
 // where the output should be stored
-string out_dir;
-
-//converts from fm^-1 GeV: 1 fm^-1 = fac*GeV
-double fac = 1;//.1973;
+string param_str, out_dir;
 
 // controls rate of phi relaxation
-double LAMBDA_M = 10/fac/fac;
+double LAMBDA_M = 10;
 
 // number of phi modes to include
-int DEL1 = 5;
-int DEL2 = 90;
+int DEL1 = 20;
+int DEL2 = 80;
 int NUM_MODES = 2*DEL1 + DEL2;
 
 //controls value of tau_Pi
@@ -84,8 +81,7 @@ long int length,globali;
 double globalx;
 
 double *eoT4,*cs2i,*poT4,*Ti;
-//c_v is never used, should be eliminated
-double *xi,*dXi,*d2Xi,*c_v,*Q,*dQ;
+double *xi,*dXi,*d2Xi,*Q,*dQ;
 
 //radius of nucleus in fm
 double Rnuc=6.4;
@@ -229,7 +225,7 @@ void loadeos()
   fstream eosf;
 
   //ideal equation of state
-  eosf.open("idEOSrich.dat", ios::in);
+  eosf.open("EOS/idEOSrich.dat", ios::in);
 
   //qcd equation of state from Mikko Laine and York Schroeder, 
   //hep-ph/0603048
@@ -250,7 +246,6 @@ void loadeos()
 			xi = new double[length];
 			dXi = new double[length];
       d2Xi = new double[length];
-      c_v = new double[length];
 
       for (int i=1;i<=length;i++)
       {
@@ -934,7 +929,7 @@ int main() {
 	
 	readParameters("params.txt");
 
-	set_output_string(out_dir);
+	set_output_string(param_str, out_dir);
 
 	printDivider();
 

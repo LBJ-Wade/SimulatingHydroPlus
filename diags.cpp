@@ -247,7 +247,7 @@ void snapPhiprofile(double time)
     for(int i=0; i<NUM_MODES; ++i)
     {
       phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
-			measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
+			measure = Q[i]*Q[i]/(2*M_PI*M_PI);
       ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
       //else phi_eq = globalx*1.;
@@ -258,7 +258,7 @@ void snapPhiprofile(double time)
 			}
     }
 		entropy = (e[s] + eos(e[s], s))/T(s);
-		out2 << s*fac*A << "\t" << ds/entropy << endl;
+		out2 << s*.1973*A << "\t" << ds/entropy << endl;
     out << endl;
   }
   out.close();
@@ -302,9 +302,7 @@ void snapPplusProfile(double time)
     fstream out;
     //char fname[255];
     string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/pplusprofile_").append(to_string(time/5.06842*A)).append(".dat");
-		cout << fname;
     out.open(fname, ios::out);
-    double fac = 1/A/A/A/A/A;
     for (int s=1;s<=NUM;s++)
     {
 			globali = geti(e[s]);
