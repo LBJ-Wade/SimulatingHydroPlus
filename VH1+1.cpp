@@ -95,7 +95,8 @@ int reachedTf=0;
 
 //when true, use the critical equation of state
 bool crit_switch = false;
-bool back_react = false;
+bool back_react = true;
+bool verbose = false;
 
 // output files
 fstream T_out;
@@ -733,6 +734,8 @@ inline void doInc(double eps)
 
   int check=0;
 
+	
+	if(verbose) cout << "INSIDE MAN: loop" << endl;
   for (int s=1;s<=NUM;s++)
     {
       globali=geti(e[s]);
@@ -741,7 +744,7 @@ inline void doInc(double eps)
       vr=u[1][s]/u[0][s];
 
       //the idea here is that I identify partial_tau u^tau, partial_tau u^r,
-      //partial_tau p and constant parts as 0,1,2,3, components
+      //partial_tau e and constant parts as 0,1,2,3, components
       //of my equation. This can then be rewritten into equations
       //which are explicit in \partial_\tau u^tau,... after inversion
       //of the linear equation system and thus solved
@@ -769,6 +772,9 @@ inline void doInc(double eps)
 			if(crit_switch && back_react)
       {
         p = crit_eos(e[s], s);
+			  double xiInv = 1/getintXi();
+        double phi_eq = 1/(Q[1]*Q[1]+xiInv*xiInv);
+				cout << phi[1][s] << "\t" << phi_eq << "\t" << 1/xiInv << endl;
 				crit_dp(Drp, crit_dtp, e[s], s);
 			}
 			else
@@ -873,6 +879,7 @@ inline void doInc(double eps)
         Phi[i][s] = phi[i][s] + eps*Dtphi(i,s,phi_eq);
       }
     }
+		if(verbose) cout << "INSIDE MAN: end loop" << endl;
 }
 
 //main driver routine
@@ -904,10 +911,10 @@ void Evolve() {
     if((t*.1973*A > 3.3) && !(crit_switch))
     {
       load_crit_eos();
-         crit_switch = true;
+      crit_switch = true;
       cout << "Critical eos being used now!!!" << endl;
-         if(back_react) cout << "With back reaction!!" << endl;
-            snapshot(t);
+      if(back_react) cout << "With back reaction!!" << endl;
+         snapshot(t);
     }
   }
 }
@@ -976,6 +983,7 @@ int main() {
 	
 	printDivider();
 	
+	if(verbose) cout << "INSIDE MAN: start evolve" << endl;
 	Evolve();
 	    
 	printDivider();

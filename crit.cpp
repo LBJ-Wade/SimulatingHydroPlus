@@ -155,7 +155,7 @@ double Drphi(int i,int site)
 //Provides d\phi_j for each phi mode of momentum Q_j
 double Dtphi(int i, int site, double phi_eq)
 {
-  return -u[1][site]/u[0][site]*Drphi(i,site) - LAMBDA_M/u[0][site] * phi_eq/phi[i][site] * (1 - phi_eq/phi[i][site]);
+  return -u[1][site]/u[0][site]*Drphi(i,site) + LAMBDA_M/u[0][site] * 1./phi_eq * (1 - phi[i][site]/phi_eq);
 }
 
 //returns p_(+)(e)

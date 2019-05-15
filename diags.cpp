@@ -279,7 +279,9 @@ void snapPhiContributions(double time)
   {
     globali=geti(e[s]);
     globalx=getx(globali,e[s]);
+		//cout << "X MY MAN " << globalx << "\t" << globali << "\t" << e[s] << "\t" << eoT4[globali]*T(globali)*T(globali)*T(globali)*T(globali) << "\t" << endl;
     xiInv = 1/getintXi();
+		//cout << "xi: " << 1/xiInv << endl;
     out << s/5.06842*A << "\t";
 
 		entropy = (e[s] + eos(e[s], s))/T(s);
@@ -297,21 +299,43 @@ void snapPhiContributions(double time)
 
 void snapPplusProfile(double time)
 {
-  if(crit_switch && back_react)
+  fstream out;
+  //char fname[255];
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/pplusprofile_").append(to_string(time/5.06842*A)).append(".dat");
+  out.open(fname, ios::out);
+	double crit_dtp[4];
+	double Drp, Dtp, p, pplus, Dte;
+	if(verbose) cout << "INSIDE MAN: print pplus" << endl;
+  for (int s=1;s<=NUM;s++)
   {
-    fstream out;
-    //char fname[255];
-    string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/pplusprofile_").append(to_string(time/5.06842*A)).append(".dat");
-    out.open(fname, ios::out);
-    for (int s=1;s<=NUM;s++)
-    {
-			globali = geti(e[s]);
-			globalx = getx(globali, e[s]);
-      out << s/5.06842*A << "\t";
-      out << eos(e[s], s)/A/A/A/A << "\t" << crit_eos(e[s], s)/A/A/A/A << "\t" << globalx << endl;//<< "\t" << crit_Drp(e[s],s)*fac << endl;
-    }
-    out.close();
+		globali = geti(e[s]);
+		globalx = getx(globali, e[s]);
+    out << s/5.06842*A << "\t";
+		/*
+		p = eos(e[s], s);
+		if(crit_switch && back_react) pplus = crit_eos(e[s],s);
+		else pplus = p;
+		out << p/A/A/A/A << "\t" << pplus/A/A/A/A << endl;
+	  */
+
+		Dte = (E[s]-e[s])/EPS;
+		if(back_react && crit_switch)
+		{
+			crit_dp(Drp, crit_dtp, e[s], s);
+			p = crit_eos(e[s], s);
+			Dtp = crit_dtp[2]*Dte + crit_dtp[3];
+		}
+		else
+		{
+			Drp = cs2(e[s])*Dre(s);
+			p = eos(e[s], s);
+			Dtp = cs2(e[s])*Dte;
+		}
+
+    out << u[0][s]*u[1][s]*Drp/(e[s]+p) << "\t" << (1-u[0][s]*u[0][s])*Dtp/(e[s]+p)<< endl;
   }
+	if(verbose) cout << "INSIDE MAN: end print pplus" << endl;
+  out.close();
 }
 
 void snapshot(double time)
@@ -320,11 +344,11 @@ void snapshot(double time)
   snapvprofile(time);
   snapRinvprofile(time);
   snapEDprofile(time);
+	snapPplusProfile(time);
   if(crit_switch) 
 	{
 		snapPhiprofile(time);
 		snapPhiContributions(time);
-		snapPplusProfile(time);
 	}
 
   //snappirrprofile(time);
