@@ -37,17 +37,17 @@ LAMBDA_M        10.0
 //Critical Temperature
 TC		0.2
 
-//low temperature coefficient, p = aL T^4
-AL		1.0
+//low temperature coefficient, cV/T^3/aQGP as T->0
+AL		0.1
 
-//high temperature coefficient, p = aL T^4
+//high temperature coefficient, cV/T^3/aQGP as T-> inf
 AH		1.0
 
 //size of the critical region (along the T-axis)
 DT		0.2
 
-//maximum correlation length, xi
-XM		2.0
+//maximum correlation length, xi/fm (in units of fm)
+XM		3.0
 
 //switching temperature between low temperature conformal and critical eos
 TL		0.8

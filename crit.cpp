@@ -1,12 +1,12 @@
 /* Extra inputs required by hydro+ */
 
 //return interpolated correlation length in lattice units
-double getintXi()
+double getintA()
 {
   double result;
   long int i = globali;
 	double x = globalx;
-  if(i!=-1) result = (xi[i]+x*(xi[i+1]-xi[i]))/A;
+  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]))/A;
   else result = xi[0]/A;
   return result;
 } 
@@ -55,8 +55,8 @@ void load_crit_eos()
   fstream eosf2;
   //eosf2.open("gregRyanEOS_backReact.dat", ios::in);
 	
-	cout << string("EOS/richEOS").append(param_str).append(".dat") << endl;
-  eosf2.open(string("EOS/richEOS").append(param_str).append(".dat"), ios::in);
+	cout << string("EOS/richEOSdimensionless").append(param_str).append(".dat") << endl;
+  eosf2.open(string("EOS/richEOSdimensionless").append(param_str).append(".dat"), ios::in);
 
 	double Qinv[NUM_MODES];
 	double fm_to_lat = 1/.1973/A; //conversion from units of fm to lattice spacing
@@ -91,9 +91,9 @@ void load_crit_eos()
     	eosf2 >> eoT4[i-1];
     	eosf2 >> poT4[i-1];
     	eosf2 >> cs2i[i-1];
-    	eosf2 >> xi[i-1];
-			eosf2 >> dXi[i-1];
-			eosf2 >> d2Xi[i-1];
+    	eosf2 >> Aa[i-1];
+			eosf2 >> dlogAde[i-1];
+			eosf2 >> d2logAde2[i-1];
     }
 
 		//set initial phi to equilibrium value
@@ -114,9 +114,6 @@ void load_crit_eos()
 double getint_dXi(int site)
 {
   double result;
-  double a = 113.425, c = 14.3269;
-  long int i = globali;
-  double x = globalx;
   double norm_fac = 1/(A*A*A*A*A);
   if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))*norm_fac;
   else result = dXi[0];
@@ -127,7 +124,6 @@ double getint_dXi(int site)
 double getint_d2Xi(int site)
 {
   double result;
-  double a = 57.0826, c = 6.29069;
   double norm_fac = 1/(A*A*A*A);
   long int i = globali;
   double x = globalx;
@@ -184,7 +180,7 @@ double crit_eos(double mye, int s)
 }
 
 
-//returns dp_(+)/r, dp_(+)/dtau
+//returns p_(+) dp_(+)/r, dp_(+)/dtau
 void crit_dp(double &dpdr, double *result, double mye, int s)
 {
   /* dpdr = dp_(+)/dr,
@@ -198,12 +194,13 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
 
   double measure=0, dpde=0;
   double ds=0, db=0; //contributions from s_(+) and \beta_(+)
-  double xiInv = 1/getintXi(), xi_p = getint_dXi(s), xi_pp = getint_d2Xi(s);
+  // aa is what's usually called A (xi^-2), Atp is A^tilde prime, Atpp is A^tilde double-prime
+  double aa = 1/getintXi(), Atp = getint_Atp(s), Atpp = getint_Atpp(s);
   double phi_eq, phi_p, phi_pp; //d phi_eq / d \epsilon
 
   for(int i=0; i<NUM_MODES; ++i)
   {
-    phi_eq = 1/(Q[i]*Q[i] + xiInv*xiInv);
+    phi_eq = 1/(Q[i]*Q[i] + aa);
     phi_p = 2 * phi_eq*phi_eq * xiInv*xiInv*xiInv * xi_p;
     phi_pp = phi_p * (2*phi_p/phi_eq - 3*xi_p*xiInv) + 2*xi_pp * phi_eq*phi_eq * xiInv*xiInv*xiInv;
     measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);

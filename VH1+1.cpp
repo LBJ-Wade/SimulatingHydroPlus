@@ -81,7 +81,7 @@ long int length,globali;
 double globalx;
 
 double *eoT4,*cs2i,*poT4,*Ti;
-double *xi,*dXi,*d2Xi,*Q,*dQ;
+double *Aa,*dlogAde,*d2logAde2,*Q,*dQ;
 
 //radius of nucleus in fm
 double Rnuc=6.4;
@@ -244,9 +244,9 @@ void loadeos()
       poT4 = new double[length];
       Ti = new double[length];
 			//preferably, these should be defined in load_crit_eos()
-			xi = new double[length];
-			dXi = new double[length];
-      d2Xi = new double[length];
+			Aa = new double[length];
+			dlogAde = new double[length];
+      d2logAde2 = new double[length];
 
       for (int i=1;i<=length;i++)
       {
