@@ -1,13 +1,38 @@
 /* Extra inputs required by hydro+ */
 
 //return interpolated correlation length in lattice units
-double getintA()
+double getint_A()
 {
   double result;
   long int i = globali;
 	double x = globalx;
-  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]))/A;
-  else result = xi[0]/A;
+  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]))*TC*TC*A*A; // converting from units of Tc to lattice units
+  else result = Aa[0]*TC*TC*A*A;
+  return result;
+} 
+
+double getint_Atp()
+{
+  double result;
+  long int i = globali;
+	double x = globalx;
+  if(i!=-1) result = (Atp[i]+x*(Atp[i+1]-Atp[i]));
+  else
+	{
+		double t = getintT(i,x)/TC; //Temperature in units of Tc
+		double tmp = 0;
+		result = -.0382*(.1*t + t*t) - .19*t*t*t - .635*t*t*t*t; //Taylor expansion calculated in Mathematica
+	}
+  return result;
+} 
+
+double getint_Atpp()
+{
+  double result;
+  long int i = globali;
+	double x = globalx;
+  if(i!=-1) result = (Atpp[i]+x*(Atpp[i+1]-Atpp[i]));
+  else result = Atpp[0];
   return result;
 } 
 
@@ -92,46 +117,22 @@ void load_crit_eos()
     	eosf2 >> poT4[i-1];
     	eosf2 >> cs2i[i-1];
     	eosf2 >> Aa[i-1];
-			eosf2 >> dlogAde[i-1];
-			eosf2 >> d2logAde2[i-1];
+			eosf2 >> Atp[i-1];
+			eosf2 >> Atpp[i-1];
     }
 
 		//set initial phi to equilibrium value
-    double xiInv;
+    double A_; // A_ = xi^-2
     for (int s=1;s<=NUM;s++)
     {
     	globali = geti(e[s]);
     	globalx = getx(globali, e[s]);
-    	xiInv = 1/getintXi();
-    	for(int j=0; j<NUM_MODES; ++j) phi[j][s] = 1./(Q[j]*Q[j]+xiInv*xiInv);
+    	A_ = getint_A();
+    	for(int j=0; j<NUM_MODES; ++j) phi[j][s] = 1./(Q[j]*Q[j]+A_);
     }
     eosf2.close();
   }
   else cout << "Could not open EOS file" << endl;
-}
-
-//return interpolated d xi/d eps in lattice units
-double getint_dXi(int site)
-{
-  double result;
-  double norm_fac = 1/(A*A*A*A*A);
-  if(i!=-1) result = (dXi[i]+x*(dXi[i+1]-dXi[i]))*norm_fac;
-  else result = dXi[0];
-  return result;
-}
-
-//return interpolated d^2 xi / d eps^2 in lattice units
-double getint_d2Xi(int site)
-{
-  double result;
-  double norm_fac = 1/(A*A*A*A);
-  long int i = globali;
-  double x = globalx;
-  norm_fac *= norm_fac/A;
-
-  if(i!=-1) result = (d2Xi[i]+x*(d2Xi[i+1]-d2Xi[i]))*norm_fac;
-  else result = d2Xi[0]*norm_fac;
-  return result;
 }
 
 /* p_(+) and derivatives of p_(+) and critical modes phi[i] */
@@ -151,37 +152,11 @@ double Drphi(int i,int site)
 //Provides d\phi_j for each phi mode of momentum Q_j
 double Dtphi(int i, int site, double phi_eq)
 {
-  return -u[1][site]/u[0][site]*Drphi(i,site) + LAMBDA_M/u[0][site] * 1./phi_eq * (1 - phi[i][site]/phi_eq);
+  return -u[1][site]/u[0][site]*Drphi(i,site) - LAMBDA_M/u[0][site] * 1./phi_eq * (phi[i][site] - phi_eq);
 }
-
-//returns p_(+)(e)
-double crit_eos(double mye, int s)
-{
-  double result=0, measure=0;
-  double ds=0, db=0; //contributions from s_(+) and \beta_(+)
-  double xiInv = 1/getintXi();
-  double phi_eq, phi_p; //d phi_eq / d \epsilon
-
-  long int j=globali;
-  if(j == -1) j = 0;
-
-  for(int i=0; i<NUM_MODES; ++i)
-  {
-    phi_eq = 1/(Q[i]*Q[i] + xiInv*xiInv);
-    phi_p = 2 * phi_eq*phi_eq * xiInv*xiInv*xiInv * getint_dXi(s);
-    measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
-
-    ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
-    db += .5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1);
-  }
-
-	//printf("%e %e\n", eos(mye,s)+mye, (eos(mye, s) +mye +T(s)*ds)/(1+T(s)*db));
-  return (eos(mye, s) + mye + T(s)*ds)/(1. + T(s)*db) - mye;
-}
-
 
 //returns p_(+) dp_(+)/r, dp_(+)/dtau
-void crit_dp(double &dpdr, double *result, double mye, int s)
+void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
 {
   /* dpdr = dp_(+)/dr,
    * result[0] = coefficient of du^tau/dtau in dp_(+)/dtau
@@ -191,47 +166,75 @@ void crit_dp(double &dpdr, double *result, double mye, int s)
   */
 	result[0]=0;
 	result[1]=0;
+	double eeoT4 = mye/T(s)/T(s)/T(s)/T(s), ppoT4 = getint_poT4(), ccs2 = cs2(mye); //!!!!!
+	double woT4 = eeoT4 + ppoT4;
 
-  double measure=0, dpde=0;
-  double ds=0, db=0; //contributions from s_(+) and \beta_(+)
-  // aa is what's usually called A (xi^-2), Atp is A^tilde prime, Atpp is A^tilde double-prime
-  double aa = 1/getintXi(), Atp = getint_Atp(s), Atpp = getint_Atpp(s);
-  double phi_eq, phi_p, phi_pp; //d phi_eq / d \epsilon
+  double logmeasure_o2T3, measure=0, q=0, q_sq=0, Yi=0, Xi=0, wplus_oT4=0, tmp=0, sign=1;
+	double dpde_sum=0, dpde, dpdlogphi;
+  double Tm3ds=0, Tdb=0; 																							 // T^-3 * delta s, T * delta b
+  double A_ = getint_A(), Atp_ = getint_Atp(), Atpp_ = getint_Atpp();  // A_ = xi^-2, T^4 d logA / de, T^8 d^2 logA / de^2
+  double phi_eq, phi_p, phi_pp; 																			 //T^4 d log(phi_eq) / de, and T^8 d^2 log(phi_eq) / de^2
 
   for(int i=0; i<NUM_MODES; ++i)
   {
-    phi_eq = 1/(Q[i]*Q[i] + aa);
-    phi_p = 2 * phi_eq*phi_eq * xiInv*xiInv*xiInv * xi_p;
-    phi_pp = phi_p * (2*phi_p/phi_eq - 3*xi_p*xiInv) + 2*xi_pp * phi_eq*phi_eq * xiInv*xiInv*xiInv;
-    measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
+		q = Q[i]*Q[i];
+		q_sq = q/A_;
+		phi_eq = 1/(q + A_);
+		Xi = phi[i][s]/phi_eq;
+		Yi = Xi - 1;
+		phi_p = Atp_/(1+q_sq);														   			 // T^4 * d phi / de
+		phi_pp = (Atpp_ + q_sq*Atp_*Atp_/(1+q_sq))/(1+q_sq); 			 // T^8 * d^2 phi / de^2
+    logmeasure_o2T3 = log(q*dQ[i]/(2*M_PI*M_PI)/2) - 3*log(T(s)); // log of integration measure divided by 2 T^3
 
-    ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
-    db += .5*measure * phi_p/phi_eq * (phi[i][s]/phi_eq - 1);
-
-    dpde += -.5*measure * (phi_p*phi_p*(phi_eq - 2*phi[i][s]) + phi_eq*phi_pp*(phi[i][s] - phi_eq)) / (phi_eq*phi_eq*phi_eq);
+		//To avoid overflow
+		tmp = log(Xi) - Yi;
+		if(tmp != 0)
+		{
+			tmp = logmeasure_o2T3 + log(-tmp);
+			if(tmp > -30) Tm3ds -= exp(tmp);
+		}
+		tmp = phi_p*Yi;
+		if(tmp != 0)
+		{
+			sign = tmp/abs(tmp);
+			tmp = logmeasure_o2T3 + log(sign*tmp);
+			if(tmp>-30) Tdb += sign*exp(tmp);
+		}
+		tmp = phi_pp*Yi - phi_p*phi_p*Xi;
+		//tmp = Yi * (phi_pp * woT4 + phi_p);
+		if(tmp!=0)
+		{
+			sign = tmp/abs(tmp); 
+			tmp = logmeasure_o2T3 + log(sign*tmp);
+			if(tmp>-30) dpde_sum += sign*exp(tmp);
+		}
   }
-
-  double wplus = (eos(mye, s) + mye + T(s)*ds)/(1. + T(s)*db);
-  double bplus = 1/T(s) + db;
-
-  dpde += 1/T(s)/(mye + eos(mye, s)) * cs2(mye);
-  dpde *= wplus/bplus;
+	wplus_oT4 = (woT4 + Tm3ds)/(1+Tdb);
+	pplus = (wplus_oT4)*T(s)*T(s)*T(s)*T(s) - mye;
+	//if((s>200) && (s<250)) cout << "s, T (GeV), e/T^4, p/T^4, w/T^4, T^-3 ds, T db: " << s << "\t" << T(s)/A << "\t" << eeoT4 << "\t" << ppoT4 << "\t" << woT4 << "\t" << Tm3ds << "\t" << Tdb << endl;
+	if(isnan(pplus)){cout << "pplus is nan " << endl; abort();}
+	dpde = wplus_oT4/woT4/(1+Tdb)*(ccs2 - woT4 * dpde_sum);
+	//dpde = wplus_oT4/woT4/(1+Tdb)*(ccs2 - dpde_sum);
 	result[2] = dpde;
-
+	//cout << s << "\t" << ccs2 << "\t" << dpde_sum << "\t" << phi_p*phi_p << endl;
 
 	dpdr = dpde * Dre(s);
-	double dpdphi;
 	result[3]=0;
+	
   for(int i = 0; i<NUM_MODES; ++i)
 	{
-    phi_eq = 1/(Q[i]*Q[i] + xiInv*xiInv);
-    phi_p = 2 * phi_eq*phi_eq * xiInv*xiInv*xiInv * xi_p;
-		measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
-		dpdphi = .5*measure/bplus/phi_eq * (-wplus * phi_p/phi_eq + phi_eq/phi[i][s]-1);
+		q = Q[i]*Q[i];
+		q_sq = q/A_;
+		phi_eq = 1/(q + A_);
+		Yi = phi[i][s]/phi_eq - 1;
+		phi_p = Atp_/(1+q_sq);
+    measure = q*dQ[i]/(2*M_PI*M_PI);
 
-		dpdr += dpdphi * Drphi(i,s);
-		result[3] += dpdphi * Dtphi(i,s,phi_eq);
+		dpdlogphi = -.5*T(s)*measure/(1+Tdb) * (Xi*phi_p*wplus_oT4 + Yi);
+		dpdr += dpdlogphi * (Drphi(i,s)/phi[i][s]); // !!!!! perhaps make a d log(phi) / dr and d log(phi) / dt
+		result[3] += dpdlogphi * Dtphi(i,s,phi_eq)/phi[i][s];
+		//cout << s << "\t" << dpdlogphi << "\t" << Drphi(i,s)/phi[i][s] << endl;
 	}
-	//printf("%e %e\n", dpdr, result[3]);
-	//if(counter%10==0) abort();
+	//cout << s << "\t" << dpde << "\t" << dpdlogphi << "\t" << dpdr << "\t" << result[3] << endl;
+	
 }

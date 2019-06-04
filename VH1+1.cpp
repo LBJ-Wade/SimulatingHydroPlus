@@ -40,7 +40,6 @@ using namespace std;
 #define SQRT3		sqrt(3.0)
 #define SQRT2		sqrt(2.0)
 
-
 // these global vars are initialized from parameters file
 // defaults set here are overridden by that file
 int    NUM=20, UPDATE=100,SNAPUPDATE=1000;
@@ -81,7 +80,7 @@ long int length,globali;
 double globalx;
 
 double *eoT4,*cs2i,*poT4,*Ti;
-double *Aa,*dlogAde,*d2logAde2,*Q,*dQ;
+double *Aa,*Atp,*Atpp,*Q,*dQ;
 
 //radius of nucleus in fm
 double Rnuc=6.4;
@@ -121,10 +120,6 @@ void allocateMemory() {
 	//Pi^\eta_\eta
 	piee = new double[NUM+2];
 
-	//critical mode
-  //phi = new double*[NUM_MODES];
-  //for(int i=0; i<NUM_MODES; ++i) phi[i] = new double[NUM+2];
-
 	//same as above, at new timestep
 
 	U = new double*[2];
@@ -133,10 +128,6 @@ void allocateMemory() {
 	E = new double[NUM+2];
 	Pirr = new double[NUM+2];
 	Piee = new double[NUM+2];
-
-	//critical mode
-  //Phi = new double*[NUM_MODES];
-  //for(int i=0; i<NUM_MODES; ++i) Phi[i] = new double[NUM+2];
 
 	//for convenience only
 
@@ -245,8 +236,8 @@ void loadeos()
       Ti = new double[length];
 			//preferably, these should be defined in load_crit_eos()
 			Aa = new double[length];
-			dlogAde = new double[length];
-      d2logAde2 = new double[length];
+			Atp = new double[length];
+      Atpp = new double[length];
 
       for (int i=1;i<=length;i++)
       {
@@ -393,10 +384,10 @@ long int geti(double mye)
   long int i;
   mye/=A*A*A*A;
   for (i=0;i<length;i++)
-    {
-      if (eoT4[i]*Ti[i]*Ti[i]*Ti[i]*Ti[i]>mye)
-	break;
-    }
+  {
+    if (eoT4[i]*Ti[i]*Ti[i]*Ti[i]*Ti[i]>mye)
+		break;
+  }
   return (i-1);
 }
 
@@ -420,7 +411,25 @@ double getx(long int i,double mye)
 //return interpolated temperature in lattice units
 double getintT(int i,double x)
 {
-  return (Ti[i]+x*(Ti[i+1]-Ti[i]))*A;
+	return (Ti[i]+x*(Ti[i+1]-Ti[i]))*A;
+}
+
+//return interpolated p/T^4
+double getint_poT4()
+{
+	if(globali!=-1) return (poT4[globali]+globalx*(poT4[globali+1]-poT4[globali]));
+	else return poT4[0];
+}
+
+//Interpolated speed of sound squared = dp/depsilon
+double cs2(double ed)
+{
+  long int j = globali;
+	double x = globalx;
+
+  if(j==-1){j=0; x=0;}
+
+  return cs2i[j]+x*(cs2i[j+1]-cs2i[j]);
 }
 
 //provides Temperature*lattice spacing
@@ -453,31 +462,12 @@ double eos(double mye, int s)
       temp*=temp;
       temp*=(poT4[j] + globalx*(poT4[j+1]-poT4[j]));
     }
-  else
-    {
-      temp=mye*cs2i[0];
-    }
+  else temp=mye*cs2i[0];
 
   return temp;
 
 }
 
-//Speed of Sound squared = dp/depsilon
-
-double cs2(double ed)
-{
-
-  long int j;
-  //j=geti(ed);
-
-  j=globali;
-
-  if (j==-1)
-    j=0;
-
-  //return cs2i[j]+globalx*(cs2i[j+1]-cs2i[j]);
-  return cs2i[j];
-}
 
 //Spatial derivatives
 //I'm using a naive version which might be enough 
@@ -737,7 +727,7 @@ inline void doInc(double eps)
 	
 	if(verbose) cout << "INSIDE MAN: loop" << endl;
   for (int s=1;s<=NUM;s++)
-    {
+  {
       globali=geti(e[s]);
       globalx=getx(globali,e[s]);
 
@@ -771,11 +761,10 @@ inline void doInc(double eps)
 
 			if(crit_switch && back_react)
       {
-        p = crit_eos(e[s], s);
-			  double xiInv = 1/getintXi();
-        double phi_eq = 1/(Q[1]*Q[1]+xiInv*xiInv);
-				cout << phi[1][s] << "\t" << phi_eq << "\t" << 1/xiInv << endl;
-				crit_dp(Drp, crit_dtp, e[s], s);
+			  //double xiInv = 1/getintXi();
+        //double phi_eq = 1/(Q[1]*Q[1]+xiInv*xiInv);
+				//cout << phi[1][s] << "\t" << phi_eq << "\t" << 1/xiInv << endl;
+				crit_dp(p, Drp, crit_dtp, e[s], s);
 			}
 			else
 			{
@@ -845,10 +834,11 @@ inline void doInc(double eps)
 				for (int i=0;i<2;i++) U[i][s]=u[i][s]+eps*rhs[i][0];
 
 				//for debugging
-				//this gets rid of extra dof explicitely
+				//this gets rid of extra dof explicitly
 				//U[0][s]=sqrt(1+U[1][s]*U[1][s]);
 			
 				E[s]=e[s]+eps*rhs[2][0];
+				//if((crit_switch) && (s>=457) && (s<=459)) cout << e[s] << endl;
 				Pirr[s]=pirr[s]+eps*(dtpirr[0]*rhs[0][0]+dtpirr[1]*rhs[1][0]+dtpirr[2]*rhs[2][0]+dtpirr[3]);
 				Piee[s]=piee[s]+eps/u[0][s]*(-0.5/beta2(s)*(t4_nbee[0]*rhs[0][0]+t4_nbee[1]*rhs[1][0]+t4_nbee[2]*rhs[2][0]+t4_nbee[3])/t/t
 												-piee[s]/taupi(s)-u[1][s]*Drpiee(s));
@@ -870,16 +860,16 @@ inline void doInc(double eps)
 				Piee[s]=piee[s];
 			}
 
-			double xiInv;
+			double A_;
       double phi_eq;
       //if the eos is critical, evolve the phi derivatives
       if(crit_switch) for(int i=0; i<NUM_MODES; ++i){
-			  xiInv = 1/getintXi();
-        phi_eq = 1/(Q[i]*Q[i]+xiInv*xiInv);
+			  A_ = getint_A();
+        phi_eq = 1/(Q[i]*Q[i] + A_);
         Phi[i][s] = phi[i][s] + eps*Dtphi(i,s,phi_eq);
       }
-    }
-		if(verbose) cout << "INSIDE MAN: end loop" << endl;
+  }
+	if(verbose) cout << "INSIDE MAN: end loop" << endl;
 }
 
 //main driver routine

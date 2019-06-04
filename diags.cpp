@@ -235,18 +235,18 @@ void snapPhiprofile(double time)
   string fname2 = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/entropyCorrection_").append(to_string(time/5.06842*A)).append(".dat");
   out2.open(fname2, ios::out);
 
-  double phi_eq, xiInv, entropy, measure;
+  double phi_eq, A_, entropy, measure;
   for (int s=1;s<=NUM;s++)
   {
     globali=geti(e[s]);
     globalx=getx(globali,e[s]);
-    xiInv = 1/getintXi();
+    A_ = getint_A();
 		double ds=0;
     out << s/5.06842*A << "\t";
 
     for(int i=0; i<NUM_MODES; ++i)
     {
-      phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
+      phi_eq = 1/(Q[i] * Q[i] + A_);
 			measure = Q[i]*Q[i]/(2*M_PI*M_PI);
       ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
@@ -274,20 +274,20 @@ void snapPhiContributions(double time)
   string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/phiprofileContribution_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
 
-  double phi_eq, xiInv, entropy, measure, ds;
+  double phi_eq, A_, entropy, measure, ds;
   for (int s=1;s<=NUM;s++)
   {
     globali=geti(e[s]);
     globalx=getx(globali,e[s]);
 		//cout << "X MY MAN " << globalx << "\t" << globali << "\t" << e[s] << "\t" << eoT4[globali]*T(globali)*T(globali)*T(globali)*T(globali) << "\t" << endl;
-    xiInv = 1/getintXi();
+    A_ = getint_A();
 		//cout << "xi: " << 1/xiInv << endl;
     out << s/5.06842*A << "\t";
 
 		entropy = (e[s] + eos(e[s], s))/T(s);
     for(int i=0; i<NUM_MODES; ++i)
     {
-      phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
+      phi_eq = 1/(Q[i] * Q[i] + A_);
 			measure = Q[i]*Q[i]*dQ[i]/(2*M_PI*M_PI);
       ds = .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       out << ds/entropy << "\t";
@@ -321,8 +321,7 @@ void snapPplusProfile(double time)
 		Dte = (E[s]-e[s])/EPS;
 		if(back_react && crit_switch)
 		{
-			crit_dp(Drp, crit_dtp, e[s], s);
-			p = crit_eos(e[s], s);
+			crit_dp(p, Drp, crit_dtp, e[s], s);
 			Dtp = crit_dtp[2]*Dte + crit_dtp[3];
 		}
 		else

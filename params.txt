@@ -25,7 +25,7 @@ SNAPUPDATE	400
 //viscosity over entropy
 ETAOS		 0.08
 
-//freeze-out temperature
+//freeze-out temperature, 140 MeV
 TF		0.155
 
 //dimensionless value of relaxation time for Israel-Stewart part of the hydro eqns
@@ -34,8 +34,8 @@ COEFF		3.0
 //dimensionful value of relaxation time for phi-mode relaxation eqns
 LAMBDA_M        10.0
 
-//Critical Temperature
-TC		0.2
+//Critical Temperature, 160MeV
+TC		0.200
 
 //low temperature coefficient, cV/T^3/aQGP as T->0
 AL		0.1
