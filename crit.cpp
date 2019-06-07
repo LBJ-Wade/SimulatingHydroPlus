@@ -6,8 +6,8 @@ double getint_A()
   double result;
   long int i = globali;
 	double x = globalx;
-  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]))*TC*TC*A*A; // converting from units of Tc to lattice units
-  else result = Aa[0]*TC*TC*A*A;
+  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]))*TC*TC/A/A; // converting from units of Tc to lattice units
+  else result = Aa[0]*TC*TC/A/A;
   return result;
 } 
 
@@ -85,7 +85,7 @@ void load_crit_eos()
 
 	double Qinv[NUM_MODES];
 	double fm_to_lat = 1/.1973/A; //conversion from units of fm to lattice spacing
-	for(int i = 0; i<DEL1; ++i) Qinv[i] = (512.*.1973*A - ((double)i)*(512.*.1973*A - 6.)/(1.* DEL1)) * fm_to_lat;
+	for(int i = 0; i<DEL1; ++i) Qinv[i] = (NUM*.1973*A - ((double)i)*(NUM*.1973*A - 6.)/(1.* DEL1)) * fm_to_lat;
 	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = (6. - ((double)i)*(6.-0.5)/(1.* DEL2)) * fm_to_lat;
 	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = (0.5 - i*0.5/(1.*DEL1)) * fm_to_lat;
 
@@ -152,7 +152,9 @@ double Drphi(int i,int site)
 //Provides d\phi_j for each phi mode of momentum Q_j
 double Dtphi(int i, int site, double phi_eq)
 {
-  return -u[1][site]/u[0][site]*Drphi(i,site) - LAMBDA_M/u[0][site] * 1./phi_eq * (phi[i][site] - phi_eq);
+	//double lam = LAMBDA_M*.1973*.1973*.1973*A*A*A;
+	double lam = LAMBDA_M;
+  return -u[1][site]/u[0][site]*Drphi(i,site) - lam/u[0][site] * 1./phi_eq * (phi[i][site] - phi_eq);
 }
 
 //returns p_(+) dp_(+)/r, dp_(+)/dtau
@@ -212,7 +214,7 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
 	wplus_oT4 = (woT4 + Tm3ds)/(1+Tdb);
 	pplus = (wplus_oT4)*T(s)*T(s)*T(s)*T(s) - mye;
 	//if((s>200) && (s<250)) cout << "s, T (GeV), e/T^4, p/T^4, w/T^4, T^-3 ds, T db: " << s << "\t" << T(s)/A << "\t" << eeoT4 << "\t" << ppoT4 << "\t" << woT4 << "\t" << Tm3ds << "\t" << Tdb << endl;
-	if(isnan(pplus)){cout << "pplus is nan " << endl; abort();}
+	if(isnan(pplus)){cout << s*.1973*A << " pplus is nan " << endl; abort();}
 	dpde = wplus_oT4/woT4/(1+Tdb)*(ccs2 - woT4 * dpde_sum);
 	//dpde = wplus_oT4/woT4/(1+Tdb)*(ccs2 - dpde_sum);
 	result[2] = dpde;

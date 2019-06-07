@@ -1,5 +1,5 @@
 // number of lattice sites
-NUM 		512
+NUM 		256
 
 // spatial lattice spacing in GeV^-1
 A		0.25
@@ -26,10 +26,10 @@ SNAPUPDATE	400
 ETAOS		 0.08
 
 //freeze-out temperature, 140 MeV
-TF		0.155
+TF		0.140
 
 //dimensionless value of relaxation time for Israel-Stewart part of the hydro eqns
-COEFF		3.0
+COEFF		2.0
 
 //dimensionful value of relaxation time for phi-mode relaxation eqns
 LAMBDA_M        10.0

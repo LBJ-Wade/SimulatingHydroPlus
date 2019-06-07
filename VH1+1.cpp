@@ -94,7 +94,7 @@ int reachedTf=0;
 
 //when true, use the critical equation of state
 bool crit_switch = false;
-bool back_react = true;
+bool back_react = false;
 bool verbose = false;
 
 // output files

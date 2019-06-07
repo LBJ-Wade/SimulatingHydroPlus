@@ -251,7 +251,7 @@ void snapPhiprofile(double time)
       ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
       //else phi_eq = globalx*1.;
-      out << Q[i] << "\t" << phi_eq << "\t" << phi[i][s] << "\t";
+      out << Q[i] << "\t" << phi_eq*.1973*.1973/A/A << "\t" << phi[i][s]*.1973*.1973/A/A << "\t";
 			if(i<5 && false)
 			{
 				printf("contribution %e, %e, %e\n", measure, log(phi[i][s]/phi_eq), phi[i][s]);
