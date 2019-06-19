@@ -6,8 +6,8 @@ double getint_A()
   double result;
   long int i = globali;
 	double x = globalx;
-  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]))*TC*TC/A/A; // converting from units of Tc to lattice units
-  else result = Aa[0]*TC*TC/A/A;
+  if(i!=-1) result = (Aa[i]+x*(Aa[i+1]-Aa[i]));
+  else result = Aa[0];
   return result;
 } 
 
@@ -21,7 +21,7 @@ double getint_Atp()
 	{
 		double t = getintT(i,x)/TC; //Temperature in units of Tc
 		double tmp = 0;
-		result = -.0382*(.1*t + t*t) - .19*t*t*t - .635*t*t*t*t; //Taylor expansion calculated in Mathematica
+		result = c1*t + c2*t*t + c3*t*t*t + c4*t*t*t*t + c5*t*t*t*t*t; //Taylor expansion calculated in Mathematica
 	}
   return result;
 } 
@@ -67,8 +67,8 @@ void set_output_string(string &str, string &dir)
 	str = label(str, "aH", AH);
 	str = label(str, "dT", DT);
 	str = label(str, "Xm", XM);
-	str = label(str, "TL", TL);
-	str = label(str, "TH", TH);
+	str = label(str, "TL", TL*TC);
+	str = label(str, "TH", TH*TC);
 	dir = str;
 	if(back_react) dir = dir.append("/with_backreaction");
 	else dir = dir.append("/without_backreaction");
@@ -84,8 +84,10 @@ void load_crit_eos()
   eosf2.open(string("EOS/richEOSdimensionless").append(param_str).append(".dat"), ios::in);
 
 	double Qinv[NUM_MODES];
+	double GeV_to_fm = .1973;
+	double xi0_to_fm = XI_0;
 	double fm_to_lat = 1/.1973/A; //conversion from units of fm to lattice spacing
-	for(int i = 0; i<DEL1; ++i) Qinv[i] = (NUM*.1973*A - ((double)i)*(NUM*.1973*A - 6.)/(1.* DEL1)) * fm_to_lat;
+	for(int i = 0; i<DEL1; ++i) Qinv[i] = (NUM*A*GeV_to_fm - ((double)i)*(NUM*A*GeV_to_fm - 6.)/(1.* DEL1)) * fm_to_lat;
 	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = (6. - ((double)i)*(6.-0.5)/(1.* DEL2)) * fm_to_lat;
 	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = (0.5 - i*0.5/(1.*DEL1)) * fm_to_lat;
 
@@ -109,6 +111,12 @@ void load_crit_eos()
   if (eosf2.is_open())
 	{
   	eosf2 >> length;
+    eosf2 >> c1;
+    eosf2 >> c2;
+    eosf2 >> c3;
+    eosf2 >> c4;
+		eosf2 >> c5;
+		//cout << length << "\t" << c1 << "\t" << c2 << "\t" << c3 << "\t" << c4 << endl;
 
   	for (int i=1;i<=length;i++)
   	{
@@ -117,6 +125,7 @@ void load_crit_eos()
     	eosf2 >> poT4[i-1];
     	eosf2 >> cs2i[i-1];
     	eosf2 >> Aa[i-1];
+			Aa[i-1] = Aa[i-1]/(XI_0*XI_0*fm_to_lat*fm_to_lat); //convert to A in units of lattice spacing
 			eosf2 >> Atp[i-1];
 			eosf2 >> Atpp[i-1];
     }

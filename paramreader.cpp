@@ -8,7 +8,7 @@
 extern int    NUM,UPDATE,SNAPUPDATE;
 extern long int STEPS;
 extern double A,EPS,TINIT,ETAOS,TF,TSTART,COEFF;
-extern double LAMBDA_M, TC, AL, AH, DT, XM, TL, TH;
+extern double LAMBDA_M, TC, AL, AH, DT, XM, TL, TH, XI_0;
 
 using namespace std;
 
@@ -36,6 +36,7 @@ void setParameter(char *key, char *value) {
 	if (strcmp(key,"XM")==0) XM=atof(value);
 	if (strcmp(key,"TL")==0) TL=atof(value);
 	if (strcmp(key,"TH")==0) TH=atof(value);
+	if (strcmp(key,"XI_0")==0) XI_0=atof(value);
 	return;
 }
 

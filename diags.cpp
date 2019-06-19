@@ -31,11 +31,11 @@ int freezesite()
   //search for freeze-out point
   for (int s=2;s<=NUM;s++)
     {
-      globali=geti(e[s]);
-      globalx=getx(globali,e[s]);
-      if (T(s)>TF)
-	  temp++;
-    }
+      //globali=geti(e[s]);
+      //globalx=getx(globali,e[s]);
+      //if(T(s)>TF) temp++;
+			if(e[s] > EF) temp++;
+		}
   if (temp==1)
       reachedTf=1;
   return temp;
@@ -236,6 +236,7 @@ void snapPhiprofile(double time)
   out2.open(fname2, ios::out);
 
   double phi_eq, A_, entropy, measure;
+	double lat_to_fm = .1973*A;
   for (int s=1;s<=NUM;s++)
   {
     globali=geti(e[s]);
@@ -251,7 +252,7 @@ void snapPhiprofile(double time)
       ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
       //else phi_eq = globalx*1.;
-      out << Q[i] << "\t" << phi_eq*.1973*.1973/A/A << "\t" << phi[i][s]*.1973*.1973/A/A << "\t";
+      out << Q[i] << "\t" << phi_eq*lat_to_fm*lat_to_fm << "\t" << phi[i][s]*lat_to_fm*lat_to_fm << "\t";
 			if(i<5 && false)
 			{
 				printf("contribution %e, %e, %e\n", measure, log(phi[i][s]/phi_eq), phi[i][s]);

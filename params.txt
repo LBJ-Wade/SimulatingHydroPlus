@@ -1,5 +1,5 @@
 // number of lattice sites
-NUM 		256
+NUM 		512
 
 // spatial lattice spacing in GeV^-1
 A		0.25
@@ -35,7 +35,7 @@ COEFF		2.0
 LAMBDA_M        10.0
 
 //Critical Temperature, 160MeV
-TC		0.200
+TC		0.160
 
 //low temperature coefficient, cV/T^3/aQGP as T->0
 AL		0.1
@@ -54,3 +54,6 @@ TL		0.8
 
 //switching temperature between high temperature conformal and critical eos
 TH		1.2
+
+//correlation length away from critical point in fm
+XI_0            1.0

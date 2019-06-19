@@ -44,8 +44,8 @@ using namespace std;
 // defaults set here are overridden by that file
 int    NUM=20, UPDATE=100,SNAPUPDATE=1000;
 long int STEPS=40000;
-double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15,TSTART=0.2;
-double TC=0.2, AL=0.5, AH=1.0, DT=0.2, XM=5.0, TL=0.8, TH=1.2;
+double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15, EF, TSTART=0.2;
+double TC=0.2, AL=0.5, AH=1.0, DT=0.2, XM=5.0, TL=0.8, TH=1.2, XI_0=1.;
 int whichdisc=0;
 
 // where the output should be stored
@@ -78,6 +78,7 @@ double **dtmat, **rhs;
 //also for convenience, defined in loadeos;
 long int length,globali;
 double globalx;
+double c1, c2, c3, c4, c5; //taylor coefficients for low temperature extrapolation
 
 double *eoT4,*cs2i,*poT4,*Ti;
 double *Aa,*Atp,*Atpp,*Q,*dQ;
@@ -217,7 +218,9 @@ void loadeos()
   fstream eosf;
 
   //ideal equation of state
-  eosf.open("EOS/idEOSrich.dat", ios::in);
+  //eosf.open("EOS/idEOSrich.dat", ios::in);
+	cout << string("EOS/richEOSNoCP").append(param_str).append(".dat") << endl;
+	eosf.open(string("EOS/richEOSNoCP").append(param_str).append(".dat"), ios::in);
 
   //qcd equation of state from Mikko Laine and York Schroeder, 
   //hep-ph/0603048
@@ -307,6 +310,14 @@ void setInitialConditions()
 
   loadeos();
 
+  long int i;
+  for (i=0;i<length;i++)
+  {
+  	if (Ti[i]>TF)
+		break;
+  }
+	EF = eoT4[i]*Ti[i]*Ti[i]*Ti[i]*Ti[i];
+
   //convert fm/c to lattice units
   t=TINIT*5.06842/A;
 
@@ -314,12 +325,11 @@ void setInitialConditions()
 
   double s0;
   
-  long int i;
   for (i=0;i<length;i++)
-    {
-      if (Ti[i]>TSTART)
-	break;
-    }
+  {
+  	if (Ti[i]>TSTART)
+		break;
+  }
   
   cout << "found temperature" << Ti[i] << endl;
 
