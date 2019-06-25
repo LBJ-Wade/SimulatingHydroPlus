@@ -1,10 +1,10 @@
 // number of lattice sites
-NUM 		512
+NUM 		256
 
 // spatial lattice spacing in GeV^-1
 A		0.25
 
-// temporal lattice spacing
+// temporal lattice spacing in fm/c
 EPS		0.005
 
 //initial starting time in fm/c
@@ -31,8 +31,8 @@ TF		0.140
 //dimensionless value of relaxation time for Israel-Stewart part of the hydro eqns
 COEFF		2.0
 
-//dimensionful value of relaxation time for phi-mode relaxation eqns
-LAMBDA_M        10.0
+//relaxation rate for phi-mode relaxation eqns in fm/c
+GAMMA_0         1.0
 
 //Critical Temperature, 160MeV
 TC		0.160

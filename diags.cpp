@@ -225,7 +225,7 @@ void snapPhiprofile(double time)
   //if(time>10.77) printf("\n Inside Man!!! \n");
   fstream out;
   //char fname[255];
-  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Lam").append(to_string(LAMBDA_M).substr(0,4)).append("Phiprofile_").append(to_string(time/5.06842*A)).append(".dat");
+  string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/Lam").append(to_string(GAMMA_0).substr(0,4)).append("Phiprofile_").append(to_string(time/5.06842*A)).append(".dat");
   //sprintf(fname,"../data/snapshot/Lam%.1f_Phiprofile_%.3f.dat", LAMBDA_M, time/5.06842*A);
   out.open(fname, ios::out);
 

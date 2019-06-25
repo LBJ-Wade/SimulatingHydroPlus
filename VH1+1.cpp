@@ -52,7 +52,7 @@ int whichdisc=0;
 string param_str, out_dir;
 
 // controls rate of phi relaxation
-double LAMBDA_M = 10;
+double GAMMA_0 = 1;
 
 // number of phi modes to include
 int DEL1 = 20;
@@ -311,12 +311,9 @@ void setInitialConditions()
   loadeos();
 
   long int i;
-  for (i=0;i<length;i++)
-  {
-  	if (Ti[i]>TF)
-		break;
-  }
-	EF = eoT4[i]*Ti[i]*Ti[i]*Ti[i]*Ti[i];
+  for (i=0;i<length;i++) if(Ti[i]>TF/A) break;
+	i--;
+	EF = eoT4[i]*Ti[i]*Ti[i]*Ti[i]*Ti[i] *A*A*A*A;
 
   //convert fm/c to lattice units
   t=TINIT*5.06842/A;
@@ -325,11 +322,7 @@ void setInitialConditions()
 
   double s0;
   
-  for (i=0;i<length;i++)
-  {
-  	if (Ti[i]>TSTART)
-		break;
-  }
+  for(i=0;i<length;i++) if(Ti[i]>TSTART) break;
   
   cout << "found temperature" << Ti[i] << endl;
 
