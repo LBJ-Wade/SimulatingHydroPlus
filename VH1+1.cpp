@@ -78,7 +78,6 @@ double **dtmat, **rhs;
 //also for convenience, defined in loadeos;
 long int length,globali;
 double globalx;
-double c1, c2, c3, c4, c5; //taylor coefficients for low temperature extrapolation
 
 double *eoT4,*cs2i,*poT4,*Ti;
 double *Aa,*Atp,*Atpp,*Q,*dQ;
@@ -723,7 +722,7 @@ inline void doInc(double eps)
   double th[4],nbrr[4],t4_nbee[4],r4_nbpp[4],dpit[4],dpir[4],dtpirr[4],crit_dtp[4];
 	double pi_phph = 0;
   double vr=0.0;
-	double p, Drp;
+	double p=0, Drp=0;
 
   int check=0;
 
@@ -762,11 +761,9 @@ inline void doInc(double eps)
       //rhs vector, only first index can differ from 0
       rhs[0][0]=u[1][s]*Dre(s)*(-1.0);
 
+			p=0; Drp=0;
 			if(crit_switch && back_react)
       {
-			  //double xiInv = 1/getintXi();
-        //double phi_eq = 1/(Q[1]*Q[1]+xiInv*xiInv);
-				//cout << phi[1][s] << "\t" << phi_eq << "\t" << 1/xiInv << endl;
 				crit_dp(p, Drp, crit_dtp, e[s], s);
 			}
 			else

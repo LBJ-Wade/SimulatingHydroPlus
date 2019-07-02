@@ -32,7 +32,7 @@ TF		0.140
 COEFF		2.0
 
 //relaxation rate for phi-mode relaxation eqns in fm/c
-GAMMA_0         1.0
+GAMMA_0         0.01
 
 //Critical Temperature, 160MeV
 TC		0.160
@@ -43,16 +43,16 @@ AL		0.1
 //high temperature coefficient, cV/T^3/aQGP as T-> inf
 AH		1.0
 
-//size of the critical region (along the T-axis)
+//size of the critical region (along the T-axis), in units of Tc
 DT		0.2
 
 //maximum correlation length, xi/fm (in units of fm)
 XM		3.0
 
-//switching temperature between low temperature conformal and critical eos
+//switching temperature between low temperature conformal and critical eos, in units of Tc
 TL		0.8
 
-//switching temperature between high temperature conformal and critical eos
+//switching temperature between high temperature conformal and critical eos, in units of Tc
 TH		1.2
 
 //correlation length away from critical point in fm

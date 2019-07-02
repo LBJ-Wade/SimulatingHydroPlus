@@ -11,28 +11,39 @@ double getint_A()
   return result;
 } 
 
-double getint_Atp()
+double getint_Atp(int site)
 {
+	/* A tilde prime: w d logA / de 
+	 * 
+	*/
   double result;
   long int i = globali;
 	double x = globalx;
   if(i!=-1) result = (Atp[i]+x*(Atp[i+1]-Atp[i]));
   else
 	{
-		double t = getintT(i,x)/TC; //Temperature in units of Tc
-		double tmp = 0;
-		result = c1*t + c2*t*t + c3*t*t*t + c4*t*t*t*t + c5*t*t*t*t*t; //Taylor expansion calculated in Mathematica
+		//linear interpolation assuming Atp at T=0 is 0.
+		double tmp = T(site);
+		result = 0 + (T(site) - 0) * (Atp[0] - 0)/(Ti[0]*A - 0);
 	}
   return result;
 } 
 
-double getint_Atpp()
+double getint_Atpp(int site)
 {
+	/* A tilde double prime: w^2 d^2 logA / de^2 
+	 * 
+	*/
   double result;
   long int i = globali;
 	double x = globalx;
   if(i!=-1) result = (Atpp[i]+x*(Atpp[i+1]-Atpp[i]));
-  else result = Atpp[0];
+  else
+	{
+		//linear interpolation assuming Atpp at T=0 is 0.
+		double tmp = T(site);
+		result = 0 + (T(site) - 0) * (Atpp[0] - 0)/(Ti[0]*A - 0);
+	}
   return result;
 } 
 
@@ -111,11 +122,11 @@ void load_crit_eos()
   if (eosf2.is_open())
 	{
   	eosf2 >> length;
-    eosf2 >> c1;
-    eosf2 >> c2;
-    eosf2 >> c3;
-    eosf2 >> c4;
-		eosf2 >> c5;
+    //eosf2 >> c1;
+    //eosf2 >> c2;
+    //eosf2 >> c3;
+    //eosf2 >> c4;
+		//eosf2 >> c5;
 		//cout << length << "\t" << c1 << "\t" << c2 << "\t" << c3 << "\t" << c4 << endl;
 
   	for (int i=1;i<=length;i++)
@@ -181,26 +192,47 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
   */
 	result[0]=0;
 	result[1]=0;
+	double myT = T(s), myp = eos(mye, s), w = mye + myp;
 	double eeoT4 = mye/T(s)/T(s)/T(s)/T(s), ppoT4 = getint_poT4(), ccs2 = cs2(mye); //!!!!!
 	double woT4 = eeoT4 + ppoT4;
 
-  double logmeasure_o2T3, measure=0, q=0, q_sq=0, Yi=0, Xi=0, wplus_oT4=0, tmp=0, sign=1;
+  double logmeasure_o2T3, measure_o2=0, q=0, q_sq=0, Yi=0, Xi=0, wplus_oT4=0, tmp=0, sign=1;
 	double dpde_sum=0, dpde, dpdlogphi;
-  double Tm3ds=0, Tdb=0; 																							 // T^-3 * delta s, T * delta b
-  double A_ = getint_A(), Atp_ = getint_Atp(), Atpp_ = getint_Atpp();  // A_ = xi^-2, T^4 d logA / de, T^8 d^2 logA / de^2
-  double phi_eq, phi_p, phi_pp; 																			 //T^4 d log(phi_eq) / de, and T^8 d^2 log(phi_eq) / de^2
+  double ds=0, db=0;
+  double A_ = getint_A(), Atp_ = getint_Atp(s), Atpp_ = getint_Atpp(s);
+  double phi_eq, phi_dot, phi_2dot;
+	double dpdr_term = 0, dpdt_term=0;
 
-  for(int i=0; i<NUM_MODES; ++i)
+  for(int i=0; i<NUM_MODES-2; ++i)
   {
 		q = Q[i]*Q[i];
 		q_sq = q/A_;
 		phi_eq = 1/(q + A_);
-		Xi = phi[i][s]/phi_eq;
-		Yi = Xi - 1;
-		phi_p = Atp_/(1+q_sq);														   			 // T^4 * d phi / de
-		phi_pp = (Atpp_ + q_sq*Atp_*Atp_/(1+q_sq))/(1+q_sq); 			 // T^8 * d^2 phi / de^2
-    logmeasure_o2T3 = log(q*dQ[i]/(2*M_PI*M_PI)/2) - 3*log(T(s)); // log of integration measure divided by 2 T^3
+		Yi = phi[i][s]/phi_eq - 1;
+		phi_dot  = -Atp_/(1+q_sq);														   			 // w * d log phi_eq / de
+		phi_2dot = -Atpp_/(1+q_sq) + Atp_*Atp_/(1+q_sq)/(1+q_sq);      // w^2 * d^2 log phi_eq / de^2
+		//cout << i << "\t" << q << "\t" << Yi << "\t" << phi_dot << "\t" << phi_2dot << endl;
+    //logmeasure_o2T3 = log(q*dQ[i]/(2*M_PI*M_PI)/2) - 3*log(T(s)); // log of integration measure divided by 2 T^3
+		measure_o2 = q*dQ[i]/(2*M_PI*M_PI)/2;
+		ds           +=  measure_o2 * (log(1+Yi) - Yi);
+		//if((i == 119 or i == 118) and s==1) 
+		if(Yi+1 <= 0)
+		{
+			cout << t*.1973*A << "\t" << i << "\t" << s << "\t" << phi[i][s] << "\t" << phi_eq << endl;
+			abort();
+		}
+		db           +=  measure_o2 * phi_dot * Yi / w;
+		// integral in expression for dp/de, to be multiplied by w(+)/beta(+)w
+		dpde_sum     +=  measure_o2 * (Yi*phi_2dot + (1-Yi) * phi_dot*phi_dot);
 
+		tmp           = -measure_o2 * phi_dot*(1-Yi) / phi[i][s];
+		dpdt_term    += tmp * Dtphi(i, s, phi_eq);
+		dpdr_term    += tmp * Drphi(i, s);
+
+		result[3]    += measure_o2 * Yi * Dtphi(i, s, phi_eq)/phi[i][s];
+		dpdr         += measure_o2 * Yi * Drphi(i, s)/phi[i][s];
+
+		/*
 		//To avoid overflow
 		tmp = log(Xi) - Yi;
 		if(tmp != 0)
@@ -215,7 +247,7 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
 			tmp = logmeasure_o2T3 + log(sign*tmp);
 			if(tmp>-30) Tdb += sign*exp(tmp);
 		}
-		tmp = phi_pp*Yi - phi_p*phi_p*Xi;
+		tmp = phi_pp*Yi + phi_p*phi_p*(1-Yi);
 		//tmp = Yi * (phi_pp * woT4 + phi_p);
 		if(tmp!=0)
 		{
@@ -223,7 +255,29 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
 			tmp = logmeasure_o2T3 + log(sign*tmp);
 			if(tmp>-30) dpde_sum += sign*exp(tmp);
 		}
+		*/
   }
+	double Tbplus = (1 + myT*db);
+	double dp    = myT*(ds - w*db)/Tbplus;
+	       pplus = myp + dp;
+	double wplus = mye + pplus;
+
+	//if(t*.1973*A > 4.157 and isnan(dp)) cout << s << "\t" << Tbplus << "\t" << ds << "\t" << db << "\t" << myT <<  endl;
+
+	dpdr      += dpdr_term * wplus/w;
+	dpdr      *= myT/Tbplus;
+
+	result[3] += dpdt_term * wplus/w;
+	result[3] *= myT/Tbplus;
+
+	dpde       = ccs2 + myT*wplus/w/w/Tbplus * dpde_sum;
+	result[2]  = dpde;
+	dpdr      += dpde * Dre(s);
+	//cout << s << "\t" << ds << "\t" << db << "\t" << dp << endl;
+	//cout << s << "\t" << mye << "\t" << myT << "\t" << w << "\t" << pplus << "\t"  << Tbplus << "\t" << ccs2 << "\t" << dpde << "\t" << Dre(s) << "\t" << dpdr << endl;
+
+
+	/*
 	wplus_oT4 = (woT4 + Tm3ds)/(1+Tdb);
 	pplus = (wplus_oT4)*T(s)*T(s)*T(s)*T(s) - mye;
 	//if((s>200) && (s<250)) cout << "s, T (GeV), e/T^4, p/T^4, w/T^4, T^-3 ds, T db: " << s << "\t" << T(s)/A << "\t" << eeoT4 << "\t" << ppoT4 << "\t" << woT4 << "\t" << Tm3ds << "\t" << Tdb << endl;
@@ -251,5 +305,6 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
 		//cout << s << "\t" << dpdlogphi << "\t" << Drphi(i,s)/phi[i][s] << endl;
 	}
 	//cout << s << "\t" << dpde << "\t" << dpdlogphi << "\t" << dpdr << "\t" << result[3] << endl;
+	*/
 	
 }
