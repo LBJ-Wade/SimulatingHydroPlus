@@ -5,7 +5,7 @@
 
 
 // external vars defined in solve.cpp which are loaded here
-extern int    NUM,UPDATE,SNAPUPDATE;
+extern int    NUM,UPDATE,SNAPUPDATE,SIMTYPE;
 extern long int STEPS;
 extern double A,EPS,TINIT,ETAOS,TF,TSTART,COEFF;
 extern double GAMMA_0, TC, AL, AH, DT, XM, TL, TH, XI_0;
@@ -17,26 +17,27 @@ using namespace std;
 // appropriate type.  lots of hardcoding here
 void setParameter(char *key, char *value) {
 	// integer params
-	if (strcmp(key,"NUM")==0) NUM=atoi(value);
-	if (strcmp(key,"TINIT")==0) TINIT=atof(value);
-	if (strcmp(key,"STEPS")==0) STEPS=atoi(value);
-	if (strcmp(key,"UPDATE")==0) UPDATE=atoi(value);
-	if (strcmp(key,"SNAPUPDATE")==0) SNAPUPDATE=atoi(value);
-	if (strcmp(key,"A")==0) A=atof(value);
-	if (strcmp(key,"COEFF")==0) COEFF=atof(value);
-	if (strcmp(key,"EPS")==0) EPS=atof(value);
-	if (strcmp(key,"ETAOS")==0) ETAOS=atof(value);
-	if (strcmp(key,"TF")==0) TF=atof(value);
-	if (strcmp(key,"TSTART")==0) TSTART=atof(value);
-	if (strcmp(key,"GAMMA_0")==0) GAMMA_0=atof(value);
-	if (strcmp(key,"TC")==0) TC=atof(value);
-	if (strcmp(key,"AL")==0) AL=atof(value);
-	if (strcmp(key,"AH")==0) AH=atof(value);
-	if (strcmp(key,"DT")==0) DT=atof(value);
-	if (strcmp(key,"XM")==0) XM=atof(value);
-	if (strcmp(key,"TL")==0) TL=atof(value);
-	if (strcmp(key,"TH")==0) TH=atof(value);
-	if (strcmp(key,"XI_0")==0) XI_0=atof(value);
+	if (strcmp(key,"NUM")==0) 				NUM=atoi(value);
+	if (strcmp(key,"TINIT")==0) 			TINIT=atof(value);
+	if (strcmp(key,"STEPS")==0) 			STEPS=atoi(value);
+	if (strcmp(key,"UPDATE")==0) 			UPDATE=atoi(value);
+	if (strcmp(key,"SNAPUPDATE")==0)  SNAPUPDATE=atoi(value);
+	if (strcmp(key,"A")==0) 					A=atof(value);
+	if (strcmp(key,"COEFF")==0) 			COEFF=atof(value);
+	if (strcmp(key,"EPS")==0) 				EPS=atof(value);
+	if (strcmp(key,"ETAOS")==0) 			ETAOS=atof(value);
+	if (strcmp(key,"TF")==0) 					TF=atof(value);
+	if (strcmp(key,"TSTART")==0) 			TSTART=atof(value);
+	if (strcmp(key,"GAMMA_0")==0) 		GAMMA_0=atof(value);
+	if (strcmp(key,"TC")==0) 					TC=atof(value);
+	if (strcmp(key,"AL")==0) 					AL=atof(value);
+	if (strcmp(key,"AH")==0) 					AH=atof(value);
+	if (strcmp(key,"DT")==0) 					DT=atof(value);
+	if (strcmp(key,"XM")==0) 					XM=atof(value);
+	if (strcmp(key,"TL")==0) 					TL=atof(value);
+	if (strcmp(key,"TH")==0) 					TH=atof(value);
+	if (strcmp(key,"XI_0")==0) 				XI_0=atof(value);
+	if (strcmp(key,"SIMTYPE")==0) 		SIMTYPE=atof(value);
 	return;
 }
 

@@ -81,8 +81,9 @@ void set_output_string(string &str, string &dir)
 	str = label(str, "TL", TL*TC);
 	str = label(str, "TH", TH*TC);
 	dir = str;
-	if(back_react) dir = dir.append("/with_backreaction");
-	else dir = dir.append("/without_backreaction");
+	if(SIMTYPE==2)      dir = dir.append("/with_backreaction");
+	else if(SIMTYPE==1) dir = dir.append("/without_backreaction");
+	else                dir = dir.append("/noCP");
 	cout << "outputing to " << dir << endl;
 }
 
@@ -95,10 +96,10 @@ void load_crit_eos()
   eosf2.open(string("EOS/richEOSdimensionless").append(param_str).append(".dat"), ios::in);
 
 	double Qinv[NUM_MODES];
-	double GeV_to_fm = .1973;
+	double invGeV_to_fm = .1973;
 	double xi0_to_fm = XI_0;
 	double fm_to_lat = 1/.1973/A; //conversion from units of fm to lattice spacing
-	for(int i = 0; i<DEL1; ++i) Qinv[i] = (NUM*A*GeV_to_fm - ((double)i)*(NUM*A*GeV_to_fm - 6.)/(1.* DEL1)) * fm_to_lat;
+	for(int i = 0; i<DEL1; ++i) Qinv[i] = (NUM*A*invGeV_to_fm - ((double)i)*(NUM*A*invGeV_to_fm - 6.)/(1.* DEL1)) * fm_to_lat;
 	for(int i = 0; i<DEL2; ++i) Qinv[i+DEL1] = (6. - ((double)i)*(6.-0.5)/(1.* DEL2)) * fm_to_lat;
 	for(int i = 0; i<DEL1; ++i) Qinv[i+DEL1+DEL2] = (0.5 - i*0.5/(1.*DEL1)) * fm_to_lat;
 
@@ -192,36 +193,33 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
   */
 	result[0]=0;
 	result[1]=0;
-	double myT = T(s), myp = eos(mye, s), w = mye + myp;
-	double eeoT4 = mye/T(s)/T(s)/T(s)/T(s), ppoT4 = getint_poT4(), ccs2 = cs2(mye); //!!!!!
-	double woT4 = eeoT4 + ppoT4;
+	double myT = T(s), myp = eos(mye, s), w = mye + myp, cs2_ = cs2(mye); //!!!!!
 
-  double measure_o2=0, q=0, q_sq=0, Yi=0, Xi=0, wplus_oT4=0, tmp=0, sign=1;
-	double dpde_sum=0, dpde, dpdlogphi;
+  double measure=0, q=0, q_sq=0, Yi=0;
+	double dpde_sum=0, dpde;
   double ds=0, db=0;
-  double A_ = getint_A(), Atp_ = getint_Atp(s), Atpp_ = getint_Atpp(s);
+  double A_ = getint_A(), Adot = getint_Atp(s), A2dot = getint_Atpp(s); //A = xi^-2, Atp = \tilde{A}', Atpp = \tilde{A}''
   double phi_eq, phi_dot, phi_2dot;
-	double dpdr_term = 0, dpdt_term=0;
+	double dpdr_term1 = 0, dpdr_term2 = 0, dpdt_term1=0, dpdt_term2=0;
 
-  for(int i=0; i<NUM_MODES-2; ++i)
+  for(int i=0; i<NUM_MODES; ++i)
   {
 		q = Q[i]*Q[i];
 		q_sq = q/A_;
 		phi_eq = 1/(q + A_);
 		Yi = phi[i][s]/phi_eq - 1;
-		phi_dot  = -Atp_/(1+q_sq);														   			 // w * d log phi_eq / de
-		phi_2dot = -Atpp_/(1+q_sq) + Atp_*Atp_/(1+q_sq)/(1+q_sq);      // w^2 * d^2 log phi_eq / de^2
-		measure_o2 = q*dQ[i]/(2*M_PI*M_PI)/2;
-		ds           +=  measure_o2 * (log(1+Yi) - Yi);
-		db           +=  measure_o2 * phi_dot * Yi / w;
-		dpde_sum     +=  measure_o2 * (Yi*phi_2dot + (1-Yi) * phi_dot*phi_dot);
+		phi_dot  = -Adot/(1+q_sq);														   			 // w * d log phi_eq / de
+		phi_2dot = -A2dot/(1+q_sq) - q_sq*Adot*Adot/(1+q_sq)/(1+q_sq);      // w^2 * d^2 log phi_eq / de^2
+		measure = q*dQ[i]/(2*M_PI*M_PI);
+		ds           +=  .5*measure * (log(1+Yi) - Yi);
+		db           +=  .5*measure * phi_dot * Yi / w;
+		dpde_sum     +=  .5*measure * (-Yi*phi_2dot + (1+Yi) * phi_dot*phi_dot);
 
-		tmp           = -measure_o2 * phi_dot*(1-Yi) / phi[i][s];
-		dpdt_term    += tmp * Dtphi(i, s, phi_eq);
-		dpdr_term    += tmp * Drphi(i, s);
+		dpdt_term1   += -.5*measure * phi_dot*(1+Yi) / phi[i][s] * Dtphi(i, s, phi_eq);
+		dpdr_term1   += -.5*measure * phi_dot*(1+Yi) / phi[i][s] * Drphi(i, s);
 
-		result[3]    += measure_o2 * Yi * Dtphi(i, s, phi_eq)/phi[i][s];
-		dpdr         += measure_o2 * Yi * Drphi(i, s)/phi[i][s];
+		dpdt_term2   += -.5*measure * Yi * Dtphi(i, s, phi_eq)/phi[i][s];
+		dpdr_term2   += -.5*measure * Yi * Drphi(i, s)/phi[i][s];
 
   }
 	double Tbplus = (1 + myT*db);
@@ -229,13 +227,10 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
 	       pplus = myp + dp;
 	double wplus = mye + pplus;
 
-	dpdr      += dpdr_term * wplus/w;
-	dpdr      *= myT/Tbplus;
+	dpdr       = myT/Tbplus * (wplus/w * dpdr_term1 + dpdr_term2);
+	result[3]  = myT/Tbplus * (wplus/w * dpdt_term1 + dpdt_term2);
 
-	result[3] += dpdt_term * wplus/w;
-	result[3] *= myT/Tbplus;
-
-	dpde       = ccs2 + myT*wplus/w/w/Tbplus * dpde_sum;
+	dpde       = wplus/w/Tbplus * cs2_ + myT*wplus/w/w/Tbplus * dpde_sum;
 	result[2]  = dpde;
 	dpdr      += dpde * Dre(s);
 }

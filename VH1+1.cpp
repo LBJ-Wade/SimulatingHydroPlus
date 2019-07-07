@@ -42,7 +42,7 @@ using namespace std;
 
 // these global vars are initialized from parameters file
 // defaults set here are overridden by that file
-int    NUM=20, UPDATE=100,SNAPUPDATE=1000;
+int    NUM=20, UPDATE=100,SNAPUPDATE=1000,SIMTYPE=2;
 long int STEPS=40000;
 double A=0.05,EPS=0.001,TINIT=1,ETAOS=0.0,TF=0.15, EF, TSTART=0.2;
 double TC=0.2, AL=0.5, AH=1.0, DT=0.2, XM=5.0, TL=0.8, TH=1.2, XI_0=1.;
@@ -52,11 +52,11 @@ int whichdisc=0;
 string param_str, out_dir;
 
 // controls rate of phi relaxation
-double GAMMA_0 = 1;
+double GAMMA_0 = 0.1;
 
 // number of phi modes to include
-int DEL1 = 20;
-int DEL2 = 80;
+int DEL1 = 20; //number of UV or IR modes (2*20 modes in total)
+int DEL2 = 80; //number of intermediate modes
 int NUM_MODES = 2*DEL1 + DEL2;
 
 //controls value of tau_Pi
@@ -71,6 +71,7 @@ double **U,*E,*Pirr,*Piee,**Phi;
 //overall time
 double t = 0;
 long int counter = 0;
+double switch_time = 3.3; //time at which we switch from non-critical to critical eos, in fm/c
 
 //these are global for convenience; used in doInc
 double **dtmat, **rhs;
@@ -91,11 +92,9 @@ double anuc=0.54;
 //flags
 int wflag=0;
 int reachedTf=0;
-
-//when true, use the critical equation of state
 bool crit_switch = false;
-bool back_react = false;
 bool verbose = false;
+bool back_react; //if true, use backreaction
 
 // output files
 fstream T_out;
@@ -437,17 +436,10 @@ double cs2(double ed)
 //provides Temperature*lattice spacing
 double T(int site)
 {
-  //ideal
-  double temp;
+  long int j=globali;
 
-  long int j;
-  //j=geti(e[site]);
-  j=globali;
-
-  if (j!=-1)
-    return getintT(globali,globalx);
-  else
-    return sqrt(sqrt(e[site]/eoT4[0]));
+  if (j!=-1) return getintT(globali,globalx);
+  else return sqrt(sqrt(e[site]/eoT4[0]));
 }
 
 //Equation of State; returns p(e)
@@ -898,7 +890,7 @@ void Evolve() {
 
 
     // t=3.3fm/c is approximately the time when 3fm of the fluid is in the critical region
-    if((t*.1973*A > 3.3) && !(crit_switch))
+    if((t*.1973*A > switch_time) && !(crit_switch))
     {
       load_crit_eos();
       crit_switch = true;
@@ -925,6 +917,10 @@ int main() {
 	printDivider();
 	
 	readParameters("params.txt");
+	if(SIMTYPE == 2)      back_react = true;
+	else if(SIMTYPE == 1){back_react = false; switch_time = 3.3;}
+	else if(SIMTYPE == 0){back_react = false; switch_time = 100.;}
+	else{cout << "ENTER VALID SIMTYPE (0, 1, or 2)!" << endl; abort();}
 
 	set_output_string(param_str, out_dir);
 

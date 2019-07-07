@@ -25,16 +25,16 @@ SNAPUPDATE	400
 //viscosity over entropy
 ETAOS		 0.08
 
-//freeze-out temperature, 140 MeV
+//freeze-out temperature in GeV
 TF		0.140
 
 //dimensionless value of relaxation time for Israel-Stewart part of the hydro eqns
 COEFF		2.0
 
 //relaxation rate for phi-mode relaxation eqns in fm/c
-GAMMA_0         0.01
+GAMMA_0         0.1
 
-//Critical Temperature, 160MeV
+//Critical Temperature in GeV
 TC		0.160
 
 //low temperature coefficient, cV/T^3/aQGP as T->0
@@ -46,7 +46,7 @@ AH		1.0
 //size of the critical region (along the T-axis), in units of Tc
 DT		0.2
 
-//maximum correlation length, xi/fm (in units of fm)
+//maximum correlation length, xi in units of xi_0
 XM		3.0
 
 //switching temperature between low temperature conformal and critical eos, in units of Tc
@@ -57,3 +57,8 @@ TH		1.2
 
 //correlation length away from critical point in fm
 XI_0            1.0
+
+//simulation type: 0 -> no critical point (CP) 
+//		   1 -> yes CP, no backreaction (BR)
+//		   2 -> yes CP, yes BR
+SIMTYPE         0
