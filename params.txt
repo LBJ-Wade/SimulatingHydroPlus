@@ -32,7 +32,7 @@ TF		0.140
 COEFF		2.0
 
 //relaxation rate for phi-mode relaxation eqns in fm/c
-GAMMA_0         0.1
+GAMMA_0         0.5
 
 //Critical Temperature in GeV
 TC		0.160
@@ -41,7 +41,7 @@ TC		0.160
 AL		0.1
 
 //high temperature coefficient, cV/T^3/aQGP as T-> inf
-AH		1.0
+AH		0.8
 
 //size of the critical region (along the T-axis), in units of Tc
 DT		0.2
@@ -59,6 +59,6 @@ TH		1.2
 XI_0            1.0
 
 //simulation type: 0 -> no critical point (CP) 
-//		   1 -> yes CP, no backreaction (BR)
-//		   2 -> yes CP, yes BR
-SIMTYPE         0
+//if		   1 -> yes CP, no backreaction (BR)
+//if		   2 -> yes CP, yes BR
+SIMTYPE         2

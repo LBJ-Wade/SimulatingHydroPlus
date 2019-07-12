@@ -249,7 +249,7 @@ void snapPhiprofile(double time)
     {
       phi_eq = 1/(Q[i] * Q[i] + A_);
 			measure = Q[i]*Q[i]/(2*M_PI*M_PI);
-      ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
+      if(i<NUM_MODES-3) ds += .5*measure * (log(phi[i][s]/phi_eq) - phi[i][s]/phi_eq + 1.);
       //if(i != 0) phi_eq = 1/(Q[i] * Q[i] + xiInv * xiInv);
       //else phi_eq = globalx*1.;
       out << Q[i] << "\t" << phi_eq*lat_to_fm*lat_to_fm << "\t" << phi[i][s]*lat_to_fm*lat_to_fm << "\t";
@@ -259,7 +259,7 @@ void snapPhiprofile(double time)
 			}
     }
 		entropy = (e[s] + eos(e[s], s))/T(s);
-		out2 << s*.1973*A << "\t" << ds/entropy << endl;
+		out2 << s*.1973*A << "\t" << ds << "\t" << entropy << endl;
     out << endl;
   }
   out.close();
@@ -332,7 +332,7 @@ void snapPplusProfile(double time)
 			Dtp = cs2(e[s])*Dte;
 		}
 
-    out << u[0][s]*u[1][s]*Drp/(e[s]+p) << "\t" << (1-u[0][s]*u[0][s])*Dtp/(e[s]+p)<< endl;
+    out << p - eos(e[s], s) << "\t" << Drp - cs2(e[s])*Dre(s) << "\t" << Dtp - cs2(e[s])*Dte << endl;
   }
 	if(verbose) cout << "INSIDE MAN: end print pplus" << endl;
   out.close();

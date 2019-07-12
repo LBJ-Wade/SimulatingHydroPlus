@@ -53,10 +53,11 @@ void setParameter(char *key, char *value) {
 // Lines which begin with 'commentmarker' defined below are ignored
 //
 void readParameters(char *filename) {
+//void readParameters(char *filename, string out_dir){
 		
 	fstream out;
   char fname[255];
-  sprintf(fname,"../data/snapshot/info.dat");
+	//string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/info.dat");
   out.open(fname, ios::out);
 
 	string commentmarker = "//"; 

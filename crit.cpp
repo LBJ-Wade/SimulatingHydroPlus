@@ -202,7 +202,7 @@ void crit_dp(double &pplus, double &dpdr, double *result, double mye, int s)
   double phi_eq, phi_dot, phi_2dot;
 	double dpdr_term1 = 0, dpdr_term2 = 0, dpdt_term1=0, dpdt_term2=0;
 
-  for(int i=0; i<NUM_MODES; ++i)
+  for(int i=0; i<NUM_MODES-3; ++i)
   {
 		q = Q[i]*Q[i];
 		q_sq = q/A_;

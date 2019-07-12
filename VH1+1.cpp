@@ -71,7 +71,7 @@ double **U,*E,*Pirr,*Piee,**Phi;
 //overall time
 double t = 0;
 long int counter = 0;
-double switch_time = 3.3; //time at which we switch from non-critical to critical eos, in fm/c
+double switch_time = 0.5; //time at which we switch from non-critical to critical eos, in fm/c
 
 //these are global for convenience; used in doInc
 double **dtmat, **rhs;
@@ -896,8 +896,10 @@ void Evolve() {
       crit_switch = true;
       cout << "Critical eos being used now!!!" << endl;
       if(back_react) cout << "With back reaction!!" << endl;
-         snapshot(t);
+      //snapshot(t);
     }
+		
+		//if((t*.1973*A > 3.3) && (t*.1973*A < 3.30003) && SIMTYPE==0) snapshot(t);
   }
 }
 
@@ -909,6 +911,7 @@ void printDivider() {
 
 int main() {
 	
+	//extern void readParameters(char*);
 	extern void readParameters(char*);
 
 	// open files to put the data in first	
@@ -917,8 +920,8 @@ int main() {
 	printDivider();
 	
 	readParameters("params.txt");
-	if(SIMTYPE == 2)      back_react = true;
-	else if(SIMTYPE == 1){back_react = false; switch_time = 3.3;}
+	if(SIMTYPE == 2){     back_react = true;}//  switch_time = 3.3;}
+	else if(SIMTYPE == 1){back_react = false;}// switch_time = 3.3;}
 	else if(SIMTYPE == 0){back_react = false; switch_time = 100.;}
 	else{cout << "ENTER VALID SIMTYPE (0, 1, or 2)!" << endl; abort();}
 
