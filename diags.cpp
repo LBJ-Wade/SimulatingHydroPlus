@@ -301,6 +301,7 @@ void snapPhiContributions(double time)
 void snapPplusProfile(double time)
 {
   fstream out;
+	double fm_to_lat = 1/.1973/A;
   //char fname[255];
   string fname = string("../data/snapshot/").append(out_dir.substr(1,string::npos)).append("/pplusprofile_").append(to_string(time/5.06842*A)).append(".dat");
   out.open(fname, ios::out);
@@ -332,7 +333,8 @@ void snapPplusProfile(double time)
 			Dtp = cs2(e[s])*Dte;
 		}
 
-    out << p - eos(e[s], s) << "\t" << Drp - cs2(e[s])*Dre(s) << "\t" << Dtp - cs2(e[s])*Dte << endl;
+    //out << p - eos(e[s], s) << "\t" << Drp - cs2(e[s])*Dre(s) << "\t" << Dtp - cs2(e[s])*Dte << endl;
+    out << getint_A() << "\t" << u[0][s] << "\t" << GAMMA_0*XI_0*XI_0*fm_to_lat*fm_to_lat << endl;
   }
 	if(verbose) cout << "INSIDE MAN: end print pplus" << endl;
   out.close();

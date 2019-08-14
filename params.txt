@@ -1,8 +1,8 @@
 // number of lattice sites
-NUM 		256
+NUM 		2048
 
 // spatial lattice spacing in GeV^-1
-A		0.25
+A		0.03125
 
 // temporal lattice spacing in fm/c
 EPS		0.005
@@ -17,22 +17,22 @@ TSTART		0.33
 STEPS   	500000
 
 // how many steps before recording measurables
-UPDATE		400
+UPDATE		3200
 
 // how many steps before dumping all variables to file; "taking a snapshot"
-SNAPUPDATE	400
+SNAPUPDATE	3200
 
 //viscosity over entropy
 ETAOS		 0.08
 
 //freeze-out temperature in GeV
-TF		0.140
+TF		0.120
 
 //dimensionless value of relaxation time for Israel-Stewart part of the hydro eqns
 COEFF		2.0
 
-//relaxation rate for phi-mode relaxation eqns in fm/c
-GAMMA_0         0.5
+//relaxation rate for phi-mode relaxation eqns in (fm/c)^-1
+GAMMA_0         20.0
 
 //Critical Temperature in GeV
 TC		0.160

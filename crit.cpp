@@ -174,8 +174,8 @@ double Drphi(int i,int site)
 double Dtphi(int i, int site, double phi_eq)
 {
 	//double lam = GAMMA_0*.1973*.1973*.1973*A*A*A;
-	double gamma = GAMMA_0;
 	double fm_to_lat = 1/.1973/A; //conversion from units of fm to lattice spacing
+	double gamma = GAMMA_0/fm_to_lat;
 	double tmpA = getint_A();
 	double ratio = tmpA * (XI_0*XI_0*fm_to_lat*fm_to_lat);
 	double v_r = u[1][site]/u[0][site];

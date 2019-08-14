@@ -659,8 +659,12 @@ void Dmupimur(double *result,int site)
   result[1]=intres[1]*vr+pirr[site]/u[0][site];
   result[2]=0.0;
   result[3]=intres[3]*vr;
-  result[3]+=Drpirr(site)+vr*pirr[site]/t+pirr[site]/(site);
-  result[3]+=(piee[site]+(1-vr*vr)*pirr[site])/(site);
+	if(site > 10){
+		result[3]+=Drpirr(site)+vr*pirr[site]/t+pirr[site]/(site);
+		result[3]+=(piee[site]+(1-vr*vr)*pirr[site])/(site);
+	}
+	else result[3]+=Drpirr(site)+vr*pirr[site]/t;
+	
 
 }
 
